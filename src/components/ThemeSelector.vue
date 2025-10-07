@@ -25,14 +25,15 @@ function selectTheme(theme) {
 <style scoped>
 .theme-switcher {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 1001;
 }
 
 .theme-switcher button {
-  margin: 5px;
-  padding: 10px 15px;
+  margin: 0;
+  padding: 7px 10px;
   background: rgba(0, 0, 0, 0.7);
   color: var(--theme-primary, #00ff41); /* Fallback to Matrix green */
   border: 1px solid var(--theme-primary, #00ff41);

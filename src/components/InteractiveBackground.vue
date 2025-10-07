@@ -14,7 +14,7 @@ let animationInstance = null;
 
 onMounted(() => {
   if (canvas.value && props.theme.backgroundAnimation.init) {
-    props.theme.backgroundAnimation.init(canvas.value);
+    props.theme.backgroundAnimation.init(canvas.value, props.theme);
     animationInstance = props.theme.backgroundAnimation;
   }
 });

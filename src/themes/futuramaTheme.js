@@ -6,7 +6,7 @@ export const futuramaTheme = {
   favicon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>',
 
   colors: {
-    background: '#003366', // Deep space blue
+    background: '#000000', // Black
     primary: '#99FF00',   // Planet Express green
     accent: '#FFD700',     // Gold/Yellow accent
   },
@@ -40,6 +40,8 @@ export const futuramaTheme = {
   backgroundAnimation: {
     init: function(canvas, theme) {
       const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
       ctx.fillStyle = theme.colors.background;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       // Placeholder for a more complex starfield or tube animation

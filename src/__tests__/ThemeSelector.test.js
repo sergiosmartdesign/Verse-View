@@ -3,19 +3,20 @@ import { mount } from '@vue/test-utils';
 import ThemeSelector from '../components/ThemeSelector.vue';
 import { matrixTheme } from '../themes/matrixTheme.js';
 import { futuramaTheme } from '../themes/futuramaTheme.js';
+import { vaderTheme } from '../themes/vaderTheme.js';
 
 describe('ThemeSelector', () => {
   it('should emit themeChanged event when button is clicked', async () => {
     const wrapper = mount(ThemeSelector);
 
     const buttons = wrapper.findAll('button');
-    expect(buttons.length).toBe(2);
+    expect(buttons.length).toBe(3);
 
-    // Click on Futurama button
-    await buttons[1].trigger('click');
+    // Click on Vader button
+    await buttons[2].trigger('click');
 
     expect(wrapper.emitted('themeChanged')).toBeTruthy();
-    expect(wrapper.emitted('themeChanged')[0]).toEqual([futuramaTheme]);
+    expect(wrapper.emitted('themeChanged')[0]).toEqual([vaderTheme]);
   });
 
   it('should display correct theme names', () => {
@@ -24,5 +25,6 @@ describe('ThemeSelector', () => {
     const buttons = wrapper.findAll('button');
     expect(buttons[0].text()).toBe('The Matrix');
     expect(buttons[1].text()).toBe('Futurama');
+    expect(buttons[2].text()).toBe('Vader');
   });
 });

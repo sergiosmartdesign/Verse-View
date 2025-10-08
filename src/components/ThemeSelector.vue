@@ -10,8 +10,9 @@
 import { ref } from 'vue';
 import { matrixTheme } from '../themes/matrixTheme';
 import { futuramaTheme } from '../themes/futuramaTheme.js';
+import { vaderTheme } from '../themes/vaderTheme.js';
 
-const availableThemes = [matrixTheme, futuramaTheme];
+const availableThemes = [matrixTheme, futuramaTheme, vaderTheme];
 const activeTheme = ref(matrixTheme);
 
 // This function should be emitted to the parent App component

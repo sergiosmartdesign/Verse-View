@@ -78,17 +78,17 @@ onMounted(() => {
   border: 2px solid;
   border-radius: 24px;
   outline: none;
-  box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+  box-shadow: var(--theme-box-shadow);
   transition: all 0.3s;
   caret-color: transparent;
 }
 
 #searchInput:focus {
-  box-shadow: 0 0 30px rgba(0, 255, 65, 0.6);
+  box-shadow: var(--theme-box-shadow-focus);
 }
 
 #searchInput::placeholder {
-  color: rgba(0, 255, 65, 0.5);
+  color: var(--theme-placeholder-color);
 }
 
 @media (max-width: 640px) {

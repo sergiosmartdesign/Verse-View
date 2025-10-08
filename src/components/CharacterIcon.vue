@@ -23,7 +23,7 @@ defineProps({
   width: 72px;
   height: 72px;
   display: block;
-  filter: drop-shadow(0 0 4px #00ff41) drop-shadow(0 0 12px #00ff41);
+  filter: drop-shadow(0 0 4px var(--theme-primary)) drop-shadow(0 0 12px var(--theme-primary));
   opacity: 0;
   transform: scale(0.3);
   transition: all 0.8s ease-out;
@@ -32,7 +32,7 @@ defineProps({
 .search-icon.visible :deep(svg) {
   opacity: 1;
   transform: scale(1);
-  filter: drop-shadow(0 0 6px #00ff41) drop-shadow(0 0 12px #00ff41);
+  filter: drop-shadow(0 0 6px var(--theme-primary)) drop-shadow(0 0 12px var(--theme-primary));
 }
 
 :deep(.glitching) {

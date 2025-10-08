@@ -44,8 +44,7 @@ export const matrixTheme = {
 
   // Logic
   backgroundAnimation: {
-    init: function(canvasElement) {
-      const canvas = canvasElement;
+    init: function(canvas, theme) {
       const ctx = canvas.getContext('2d');
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;

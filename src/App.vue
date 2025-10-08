@@ -23,6 +23,16 @@ const themes = {
 const activeTheme = ref(matrixTheme);
 const themeStyles = ref({});
 
+// Helper function to convert hex to rgb
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+
 // Function to apply theme metadata and styles
 function applyTheme(theme) {
   // Apply page metadata
@@ -35,11 +45,16 @@ function applyTheme(theme) {
   }
   link.href = theme.favicon;
 
+  const primaryRgb = hexToRgb(theme.colors.primary);
+
   // Update CSS custom properties for global styling
   themeStyles.value = {
     '--theme-background': theme.colors.background,
     '--theme-primary': theme.colors.primary,
     '--theme-accent': theme.colors.accent,
+    '--theme-box-shadow': `0 0 20px rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.3)`,
+    '--theme-box-shadow-focus': `0 0 30px rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.6)`,
+    '--theme-placeholder-color': `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.5)`,
     'font-family': theme.font.family,
     'font-size': theme.font.size,
     'color': theme.colors.primary,

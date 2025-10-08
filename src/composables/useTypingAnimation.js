@@ -1,4 +1,4 @@
-export function useTypingAnimation(inputRef, phrases, typingSpeed = 45, glitchCallback = null) {
+export function useTypingAnimation(inputRef, phrases, typingSpeed = 45, initialText = 'Search...', glitchCallback = null) {
   let idx = 0;
 
   function typeMessage() {
@@ -29,7 +29,7 @@ export function useTypingAnimation(inputRef, phrases, typingSpeed = 45, glitchCa
   }
 
   function startSearchTyping() {
-    const text = 'Search the Matrix...';
+    const text = initialText;
     let i = 0;
     inputRef.value.placeholder = '';
 

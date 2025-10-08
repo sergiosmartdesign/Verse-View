@@ -37,7 +37,7 @@ const glitchIcon = () => {
   }
 };
 
-const { startTyping } = useTypingAnimation(inputRef, props.theme.searchBar.placeholder.phrases, props.theme.searchBar.placeholder.typingSpeed, glitchIcon);
+const { startTyping } = useTypingAnimation(inputRef, props.theme.searchBar.placeholder.phrases, props.theme.searchBar.placeholder.typingSpeed, props.theme.searchBar.placeholder.initialText, glitchIcon);
 
 onMounted(() => {
   setTimeout(() => {

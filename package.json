@@ -11,13 +11,14 @@
   },
   "dependencies": {
     "gsap": "^3.13.0",
+    "three": "^0.180.0",
     "vue": "^3.4.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",
-    "vite": "^7.1.9",
-    "vitest": "^1.0.0",
     "@vue/test-utils": "^2.4.0",
-    "jsdom": "^23.0.0"
+    "jsdom": "^23.0.0",
+    "vite": "^7.1.9",
+    "vitest": "^1.0.0"
   }
 }

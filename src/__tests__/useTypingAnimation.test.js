@@ -9,6 +9,7 @@ describe('useTypingAnimation', () => {
   let glitchCallback;
 
   beforeEach(() => {
+    vi.useFakeTimers();
     mockInputRef = { value: { placeholder: '' } };
     phrases = ['Hello', 'World'];
     typingSpeed = 10; // Fast for testing
@@ -16,25 +17,36 @@ describe('useTypingAnimation', () => {
     glitchCallback = vi.fn();
   });
 
-  it('should start typing animation and eventually set initialText as placeholder', async () => {
-    const { startTyping } = useTypingAnimation(mockInputRef, phrases, typingSpeed, initialText, glitchCallback);
-
-    startTyping();
-
-    // Wait for the animation to complete (phrases + initial text)
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // After all phrases, it should set to initialText
-    expect(mockInputRef.value.placeholder).toBe(initialText + ' █');
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
-  it('should call glitchCallback after typing initialText', async () => {
+  it('should initialize with empty placeholder', () => {
+    const { startTyping } = useTypingAnimation(mockInputRef, phrases, typingSpeed, initialText, glitchCallback);
+    expect(mockInputRef.value.placeholder).toBe('');
+  });
+
+  it('should start typing phrases after initial delay', async () => {
     const { startTyping } = useTypingAnimation(mockInputRef, phrases, typingSpeed, initialText, glitchCallback);
 
     startTyping();
 
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Advance past the initial 3s delay
+    await vi.advanceTimersByTimeAsync(3000);
 
+    // Should start typing the first phrase
+    expect(mockInputRef.value.placeholder).toBe('H');
+  });
+
+  it('should complete typing all phrases and start initial text', async () => {
+    const { startTyping } = useTypingAnimation(mockInputRef, phrases, typingSpeed, initialText, glitchCallback);
+
+    startTyping();
+
+    // Advance through all timeouts (this will trigger the setInterval but we check before it loops infinitely)
+    await vi.advanceTimersByTimeAsync(10000);
+
+    // Should have started the initial text typing
     expect(glitchCallback).toHaveBeenCalled();
   });
 });

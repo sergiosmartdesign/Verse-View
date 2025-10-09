@@ -171,6 +171,25 @@ export const vaderTheme = {
       if (gasPlanetSvg) {
         console.log('Using SVG as base texture for gas planet');
         gasCtx.drawImage(gasPlanetSvg, 0, 0, 512, 256);
+
+        // Apply contrast enhancement
+        gasCtx.filter = 'contrast(1.3) brightness(1.1)';
+        gasCtx.globalCompositeOperation = 'source-over';
+        gasCtx.drawImage(gasPlanetSvg, 0, 0, 512, 256);
+        gasCtx.filter = 'none';
+
+        // Add purple mist effect around edges
+        const gradient = gasCtx.createRadialGradient(256, 128, 200, 256, 128, 256);
+        gradient.addColorStop(0, 'rgba(147, 51, 234, 0)'); // transparent purple center
+        gradient.addColorStop(0.7, 'rgba(147, 51, 234, 0.1)'); // subtle purple
+        gradient.addColorStop(1, 'rgba(147, 51, 234, 0.3)'); // stronger purple at edges
+
+        gasCtx.globalCompositeOperation = 'overlay';
+        gasCtx.fillStyle = gradient;
+        gasCtx.fillRect(0, 0, 512, 256);
+
+        // Reset composite operation
+        gasCtx.globalCompositeOperation = 'source-over';
       } else {
         console.log('Gas planet SVG not available, using procedural texture');
         // Create ImageData for faster pixel manipulation

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import gsap from 'gsap';
 
 export const vaderTheme = {
   themeId: 'vader',
@@ -22,7 +23,6 @@ export const vaderTheme = {
   // Component-Specific Data
   searchBar: {
     iconSvg: `<svg id="vaderIcon" width="80" height="100" viewBox="0 0 80 100">
-        <!-- Vader Helmet -->
         <rect x="10" y="10" width="60" height="70" fill="#000000" stroke="#FF0000" stroke-width="2" rx="5" />
         <rect x="20" y="20" width="40" height="30" fill="#000000" />
         <circle cx="30" cy="35" r="5" fill="#FF0000" />
@@ -44,7 +44,8 @@ export const vaderTheme = {
 
   // Logic
   backgroundAnimation: {
-    // Helper function to load SVG as texture
+    animationFrameId: null,
+
     async loadSvgTexture(svgPath) {
       try {
         const img = new Image();
@@ -63,340 +64,264 @@ export const vaderTheme = {
     },
 
     init: async function(canvas, theme) {
-      // Three.js setup
       const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 15000);
       const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setClearColor(0x000000, 1);
 
-      // Load SVG textures asynchronously
-      console.log('Loading SVG textures...');
-      const [gasPlanetSvg, rockyPlanetSvg] = await Promise.all([
+      const [gasPlanetSvg, rockyPlanetSvg, deathStarSvg] = await Promise.all([
         this.loadSvgTexture('/svg/gas-planet.svg'),
-        this.loadSvgTexture('/svg/rocky-planet.svg')
+        this.loadSvgTexture('/svg/rocky-planet.svg'),
+        this.loadSvgTexture('/svg/star-killer.svg')
       ]);
-      console.log('SVG loading complete:', { gasPlanetSvg: !!gasPlanetSvg, rockyPlanetSvg: !!rockyPlanetSvg });
-
-      // Starfield geometry
-      const starCount = 6500;
-      const positions = new Float32Array(starCount * 3);
-      const colors = new Float32Array(starCount * 3);
-
-      for (let i = 0; i < starCount; i++) {
-        positions[i * 3] = (Math.random() - 0.5) * 2000;
-        positions[i * 3 + 1] = (Math.random() - 0.5) * 2000;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 2000;
-
-        colors[i * 3] = Math.random() > 0.9 ? 1 : 0.8; // R
-        colors[i * 3 + 1] = Math.random() > 0.9 ? 0 : 0.8; // G
-        colors[i * 3 + 2] = Math.random() > 0.9 ? 0 : 0.8; // B
-      }
-
-      const geometry = new THREE.BufferGeometry();
-      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-      // Create star texture
-      const starCanvas = document.createElement('canvas');
-      starCanvas.width = 32;
-      starCanvas.height = 32;
-      const starCtx = starCanvas.getContext('2d');
-      starCtx.fillStyle = '#ffffff';
-      starCtx.beginPath();
-      starCtx.arc(16, 16, 1, 0, Math.PI * 2);
-      starCtx.fill();
-      // Add cross for star shape
-      starCtx.fillRect(14, 12, 4, 8);
-      starCtx.fillRect(12, 14, 8, 4);
-
-      const starTexture = new THREE.CanvasTexture(starCanvas);
-
-      const material = new THREE.PointsMaterial({
-        size: 4,
-        map: starTexture,
-        transparent: true,
-        opacity: 0.8,
-        alphaTest: 0.1
-      });
-
-      const starField = new THREE.Points(geometry, material);
-      scene.add(starField);
-
-      // Create planet textures
-      // Rocky planet texture with atmospheric gas
+      
       const rockyCanvas = document.createElement('canvas');
-      rockyCanvas.width = 512;
-      rockyCanvas.height = 256;
+      rockyCanvas.width = 512; rockyCanvas.height = 256;
       const rockyCtx = rockyCanvas.getContext('2d');
-      // Base rocky surface - uniform gray
-      for (let i = 0; i < 2940; i++) {  // Reduced by another 40%
-        const x = Math.random() * 512;
-        const y = Math.random() * 256;
-        rockyCtx.fillStyle = `rgb(100, 100, 100)`;  // Uniform gray
-        rockyCtx.fillRect(x, y, 2, 2);
-      }
-      // Add yellow/red atmospheric gas
-      for (let i = 0; i < 3000; i++) {
-        const x = Math.random() * 512;
-        const y = Math.random() * 256;
-        const alpha = Math.random() * 0.3 + 0.1;
-        const isYellow = Math.random() > 0.5;
-        if (isYellow) {
-          rockyCtx.fillStyle = `rgba(255, 255, 0, ${alpha})`; // Yellow gas
-        } else {
-          rockyCtx.fillStyle = `rgba(255, 100, 0, ${alpha})`; // Red gas
-        }
-        rockyCtx.fillRect(x, y, 3, 3);
-      }
-
-      // Apply SVG overlay to rocky planet if available
-      if (rockyPlanetSvg) {
-        rockyCtx.globalAlpha = 0.3; // Subtle overlay for rocky planet
-        rockyCtx.globalCompositeOperation = 'multiply'; // Blend with underlying texture
-        rockyCtx.drawImage(rockyPlanetSvg, 0, 0, 512, 256);
-        rockyCtx.globalAlpha = 1.0; // Reset alpha
-        rockyCtx.globalCompositeOperation = 'source-over'; // Reset composite operation
-      }
-
+      for (let i = 0; i < 2940; i++) { const x = Math.random() * 512; const y = Math.random() * 256; rockyCtx.fillStyle = `rgb(100, 100, 100)`; rockyCtx.fillRect(x, y, 2, 2); }
+      for (let i = 0; i < 3000; i++) { const x = Math.random() * 512; const y = Math.random() * 256; const alpha = Math.random() * 0.3 + 0.1; rockyCtx.fillStyle = Math.random() > 0.5 ? `rgba(255, 255, 0, ${alpha})` : `rgba(255, 100, 0, ${alpha})`; rockyCtx.fillRect(x, y, 3, 3); }
+      if (rockyPlanetSvg) { rockyCtx.globalAlpha = 0.3; rockyCtx.globalCompositeOperation = 'multiply'; rockyCtx.drawImage(rockyPlanetSvg, 0, 0, 512, 256); rockyCtx.globalAlpha = 1.0; rockyCtx.globalCompositeOperation = 'source-over'; }
       const rockyTexture = new THREE.CanvasTexture(rockyCanvas);
-
-      // Jupiter-like gaseous planet texture
+      
       const gasCanvas = document.createElement('canvas');
-      gasCanvas.width = 512;
-      gasCanvas.height = 256;
+      gasCanvas.width = 512; gasCanvas.height = 256;
       const gasCtx = gasCanvas.getContext('2d');
-
-      // Use SVG as base texture if available, otherwise use procedural texture
-      if (gasPlanetSvg) {
-        console.log('Using SVG as base texture for gas planet');
-        gasCtx.drawImage(gasPlanetSvg, 0, 0, 512, 256);
-
-        // Apply contrast enhancement
-        gasCtx.filter = 'contrast(1.3) brightness(1.1)';
-        gasCtx.globalCompositeOperation = 'source-over';
-        gasCtx.drawImage(gasPlanetSvg, 0, 0, 512, 256);
-        gasCtx.filter = 'none';
-
-        // Add purple mist effect around edges
-        const gradient = gasCtx.createRadialGradient(256, 128, 200, 256, 128, 256);
-        gradient.addColorStop(0, 'rgba(147, 51, 234, 0)'); // transparent purple center
-        gradient.addColorStop(0.7, 'rgba(147, 51, 234, 0.1)'); // subtle purple
-        gradient.addColorStop(1, 'rgba(147, 51, 234, 0.3)'); // stronger purple at edges
-
-        gasCtx.globalCompositeOperation = 'overlay';
-        gasCtx.fillStyle = gradient;
-        gasCtx.fillRect(0, 0, 512, 256);
-
-        // Reset composite operation
-        gasCtx.globalCompositeOperation = 'source-over';
-      } else {
-        console.log('Gas planet SVG not available, using procedural texture');
-        // Create ImageData for faster pixel manipulation
-        const imageData = gasCtx.createImageData(512, 256);
-        const data = imageData.data;
-
-        for (let x = 0; x < 512; x++) {
-          for (let y = 0; y < 256; y++) {
-            const pixelIndex = (y * 512 + x) * 4;
-
-            // Convert to spherical coordinates (latitude from -90 to 90)
-            const lat = ((y / 256) - 0.5) * Math.PI; // -π/2 to π/2
-            const lon = (x / 512) * 2 * Math.PI;     // 0 to 2π
-
-            // Jupiter's banded structure based on latitude
-            const bandIndex = Math.floor((lat + Math.PI/2) / (Math.PI / 8)); // 8 bands
-            let baseR, baseG, baseB;
-            if (Math.abs(lat) < Math.PI/6) { // Equatorial region
-              if (bandIndex % 2 === 0) {
-                baseR = 200; baseG = 120; baseB = 60; // Orange-brown
-              } else {
-                baseR = 150; baseG = 100; baseB = 50; // Darker brown
-              }
-            } else { // Polar regions
-              baseR = 240; baseG = 240; baseB = 240; // White
-            }
-
-            // Atmospheric swirls with multiple noise layers
-            const swirl1 = Math.sin(lon * 4 + lat * 2) * 0.3;
-            const swirl2 = Math.sin(lon * 8 + lat * 4) * 0.2;
-            const swirl3 = Math.sin(lon * 16 + lat * 8) * 0.1;
-            const turbulence = swirl1 + swirl2 + swirl3;
-
-            // Great Red Spot (approximate position and size)
-            const grsLat = -0.3; // Southern hemisphere
-            const grsLon = 2.5;  // Around 140 degrees
-            const grsSize = 0.3;
-            const distToGRS = Math.sqrt((lat - grsLat)**2 + ((lon - grsLon + Math.PI) % (2*Math.PI) - Math.PI)**2);
-            const inGRS = distToGRS < grsSize;
-
-            let r = baseR, g = baseG, b = baseB;
-            if (inGRS) {
-              // Great Red Spot - deep red with some variation
-              r = 150 + turbulence * 50;
-              g = 30 + turbulence * 30;
-              b = 20 + turbulence * 20;
-            } else {
-              // Apply turbulence to base colors
-              r = Math.max(0, Math.min(255, baseR + turbulence * 60));
-              g = Math.max(0, Math.min(255, baseG + turbulence * 40));
-              b = Math.max(0, Math.min(255, baseB + turbulence * 30));
-            }
-
-            // Set pixel data (RGBA)
-            data[pixelIndex] = Math.floor(r);     // Red
-            data[pixelIndex + 1] = Math.floor(g); // Green
-            data[pixelIndex + 2] = Math.floor(b); // Blue
-            data[pixelIndex + 3] = 255;           // Alpha
-          }
-        }
-
-        // Put the image data onto the canvas
-        gasCtx.putImageData(imageData, 0, 0);
-      }
-
+      if (gasPlanetSvg) { gasCtx.drawImage(gasPlanetSvg, 0, 0, 512, 256); }
       const gasTexture = new THREE.CanvasTexture(gasCanvas);
-      console.log('Gas texture created:', gasTexture);
 
-      // Lighting
-      const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+      const deathStarCanvas = document.createElement('canvas');
+      deathStarCanvas.width = 1024;
+      deathStarCanvas.height = 512;
+      const deathStarCtx = deathStarCanvas.getContext('2d');
+      deathStarCtx.fillStyle = '#222222';
+      deathStarCtx.fillRect(0, 0, 1024, 512);
+      if (deathStarSvg) {
+        deathStarCtx.drawImage(deathStarSvg, 0, 0, 1024, 512);
+      }
+      const deathStarTexture = new THREE.CanvasTexture(deathStarCanvas);
+
+      const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
       scene.add(ambientLight);
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
       directionalLight.position.set(1, 1, 1);
       scene.add(directionalLight);
-
-      // Planets
+      
       const planetGeometry = new THREE.SphereGeometry(50, 32, 32);
       const planetMaterial1 = new THREE.MeshLambertMaterial({ map: rockyTexture });
       const planet1 = new THREE.Mesh(planetGeometry, planetMaterial1);
       planet1.position.set(500, 200, -800);
       scene.add(planet1);
-      console.log('Rocky planet added to scene');
-
       const planetMaterial2 = new THREE.MeshLambertMaterial({ map: gasTexture });
       const planet2 = new THREE.Mesh(planetGeometry, planetMaterial2);
       planet2.position.set(-300, -100, -600);
       scene.add(planet2);
-      console.log('Gas planet added to scene');
 
-      camera.position.z = 100;
+      const deathStarGeometry = new THREE.SphereGeometry(300, 64, 64);
+      const deathStarMaterial = new THREE.MeshLambertMaterial({ 
+          map: deathStarTexture,
+          transparent: true,
+          opacity: 0 
+      });
+      const deathStar = new THREE.Mesh(deathStarGeometry, deathStarMaterial);
+      scene.add(deathStar);
 
-      // Animation state
+      const starCount = 5000;
+      const starPositions = []; 
+      const lineVertices = new Float32Array(starCount * 6); 
+      for (let i = 0; i < starCount; i++) {
+        const x = (Math.random() - 0.5) * 4000;
+        const y = (Math.random() - 0.5) * 4000;
+        const z = (Math.random() - 0.5) * 4000;
+        starPositions.push({ x, y, z, velocity: 0 });
+      }
+      
+      const starGeometry = new THREE.BufferGeometry();
+      starGeometry.setAttribute('position', new THREE.BufferAttribute(lineVertices, 3));
+      const starMaterial = new THREE.LineBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending,
+      });
+      const starField = new THREE.LineSegments(starGeometry, starMaterial);
+      scene.add(starField);
+      
+      camera.position.z = 1000;
+      
+      let cameraSpeed = { value: 0.5 };
       let phase = 'static';
       let phaseStartTime = Date.now();
-      let cameraSpeed = 0.5;
-      let stretchFactor = 1;
+      let sphereComputed = false;
+      
+      let orbitAngle = 0;
+      let orbitInitialized = false;
 
       function animate() {
+        this.animationFrameId = requestAnimationFrame(animate.bind(this));
+        
         const currentTime = Date.now();
         const elapsed = (currentTime - phaseStartTime) / 1000;
 
-        // Phase transitions
         if (phase === 'static' && elapsed > 5) {
-          phase = 'jump';
-          phaseStartTime = currentTime;
-        } else if (phase === 'jump' && elapsed > 1.5) {
-          phase = 'tunnel';
-          phaseStartTime = currentTime;
-        } else if (phase === 'tunnel' && elapsed > 10) {
-          phase = 'exit';
-          phaseStartTime = currentTime;
-        } else if (phase === 'exit' && elapsed > 1.5) {
-          phase = 'newspace';
-          phaseStartTime = currentTime;
+            phase = 'jump';
+            phaseStartTime = currentTime;
+            
+            gsap.to(planet1.scale, { x: 0.01, y: 0.01, z: 0.01, duration: 1.5, onComplete: () => planet1.visible = false });
+            gsap.to(planet2.scale, { x: 0.01, y: 0.01, z: 0.01, duration: 1.5, onComplete: () => planet2.visible = false });
+            gsap.to(starMaterial.color, { r: 0.5, g: 0.7, b: 1.0, duration: 3.0 });
+            gsap.to(cameraSpeed, { value: 20, duration: 3.0 });
         }
 
-        // Camera movement
-        if (phase === 'static' || phase === 'newspace') {
-          cameraSpeed = 0.5;
-        } else if (phase === 'jump') {
-          cameraSpeed = Math.min(cameraSpeed + 0.1, 50);
-        } else if (phase === 'tunnel') {
-          cameraSpeed = 20;
-        } else if (phase === 'exit') {
-          cameraSpeed = Math.max(cameraSpeed - 0.2, 0.5);
+        if (phase === 'jump') {
+            if (elapsed > 3.5 && !sphereComputed) {
+                starGeometry.computeBoundingSphere();
+                sphereComputed = true;
+            }
+
+            if (elapsed > 7) {
+                phase = 'arrival';
+                phaseStartTime = currentTime;
+                
+                deathStar.position.set(
+                    camera.position.x + 100, 
+                    camera.position.y + 50, 
+                    camera.position.z - 4875
+                );
+                
+                for(const star of starPositions) {
+                    star.velocity = 0;
+                    star.x = (Math.random() - 0.5) * 4000 + camera.position.x;
+                    star.y = (Math.random() - 0.5) * 4000 + camera.position.y;
+                    star.z = camera.position.z - Math.random() * 4000;
+                }
+                starGeometry.computeBoundingSphere();
+
+                gsap.to(cameraSpeed, { value: 0, duration: 3.0, ease: 'power2.out' });
+                gsap.to(starMaterial.color, { r: 1.0, g: 1.0, b: 1.0, duration: 3.0 });
+                gsap.to(deathStar.material, { opacity: 1, duration: 3.0 });
+            }
+        }
+        
+        if (phase === 'arrival' && elapsed > 3) {
+            phase = 'final';
+            gsap.killTweensOf(cameraSpeed);
+            cameraSpeed.value = 0; 
+        }
+        
+        if (phase !== 'final') {
+          camera.position.z -= cameraSpeed.value;
         }
 
-        camera.position.z -= cameraSpeed;
-
-        // Star stretching
-        if (phase === 'jump' || phase === 'tunnel') {
-          stretchFactor = Math.min(stretchFactor + 0.05, 10);
-        } else {
-          stretchFactor = Math.max(stretchFactor - 0.05, 1);
+        if (phase === 'static') {
+            planet1.rotation.y += 0.005;
+            planet2.rotation.y += 0.003;
         }
+        
+        if (phase === 'final') {
+            deathStar.rotation.y += 0.001;
 
-        starField.scale.z = stretchFactor;
+            if (!orbitInitialized) {
+                orbitAngle = Math.atan2(camera.position.x - deathStar.position.x, camera.position.z - deathStar.position.z);
+                orbitInitialized = true;
+            }
 
-        // Rotate planets slowly
-        planet1.rotation.y += 0.005;
-        planet2.rotation.y += 0.003;
+            const orbitRadius = 4875;
+            const orbitSpeed = -0.00002; // <-- FIX: Velocidad de órbita reducida 50 veces
 
+            orbitAngle += orbitSpeed;
+
+            camera.position.x = deathStar.position.x + Math.sin(orbitAngle) * orbitRadius;
+            camera.position.z = deathStar.position.z + Math.cos(orbitAngle) * orbitRadius;
+            
+            camera.lookAt(deathStar.position);
+        }
+        
+        const currentLineVertices = starGeometry.attributes.position.array;
+        for (let i = 0; i < starCount; i++) {
+            const star = starPositions[i];
+
+            if (phase === 'jump') { 
+                star.velocity += 0.15; 
+            } else if (phase === 'arrival') {
+                star.velocity *= 0.95;
+            } else if (phase === 'final') {
+                star.velocity = 0;
+            }
+
+            star.z += star.velocity;
+
+            let lineLength = 1.5;
+            if (phase === 'jump') { 
+                lineLength += star.velocity * 5; 
+            }
+
+            const i6 = i * 6;
+            currentLineVertices[i6] = star.x; currentLineVertices[i6 + 1] = star.y; currentLineVertices[i6 + 2] = star.z;
+            currentLineVertices[i6 + 3] = star.x; currentLineVertices[i6 + 4] = star.y; currentLineVertices[i6 + 5] = star.z - lineLength;
+            
+            if (star.z > camera.position.z) {
+                star.z = camera.position.z - 4000;
+                star.x = (Math.random() - 0.5) * 4000 + camera.position.x;
+                star.y = (Math.random() - 0.5) * 4000 + camera.position.y;
+                
+                if (phase === 'jump') { 
+                    star.velocity = Math.random() * 10 + 5; 
+                } else { 
+                    star.velocity = 0; 
+                }
+            }
+        }
+        starGeometry.attributes.position.needsUpdate = true;
         renderer.render(scene, camera);
-        requestAnimationFrame(animate);
       }
-      animate();
-
-      // Store references for disposal
+      
       this.scene = scene;
-      this.camera = camera;
       this.renderer = renderer;
       this.starField = starField;
       this.planet1 = planet1;
       this.planet2 = planet2;
-      this.geometry = geometry;
-      this.material = material;
+      this.deathStar = deathStar;
+      this.starGeometry = starGeometry;
+      this.starMaterial = starMaterial;
       this.planetGeometry = planetGeometry;
       this.planetMaterial1 = planetMaterial1;
       this.planetMaterial2 = planetMaterial2;
-      this.starTexture = starTexture;
+      this.deathStarGeometry = deathStarGeometry;
+      this.deathStarMaterial = deathStarMaterial;
       this.rockyTexture = rockyTexture;
       this.gasTexture = gasTexture;
+      this.deathStarTexture = deathStarTexture;
       this.ambientLight = ambientLight;
       this.directionalLight = directionalLight;
-      this.gasPlanetSvg = gasPlanetSvg;
-      this.rockyPlanetSvg = rockyPlanetSvg;
+      
+      animate.bind(this)();
     },
+
     destroy: function() {
+      if (this.animationFrameId) {
+        cancelAnimationFrame(this.animationFrameId);
+      }
       if (this.renderer) {
         this.renderer.dispose();
       }
-      if (this.geometry) {
-        this.geometry.dispose();
-      }
-      if (this.material) {
-        this.material.dispose();
-      }
-      if (this.starTexture) {
-        this.starTexture.dispose();
-      }
-      if (this.planetGeometry) {
-        this.planetGeometry.dispose();
-      }
-      if (this.planetMaterial1) {
-        this.planetMaterial1.dispose();
-      }
-      if (this.planetMaterial2) {
-        this.planetMaterial2.dispose();
-      }
-      if (this.rockyTexture) {
-        this.rockyTexture.dispose();
-      }
-      if (this.gasTexture) {
-        this.gasTexture.dispose();
-      }
+      if (this.starGeometry) this.starGeometry.dispose();
+      if (this.starMaterial) this.starMaterial.dispose();
+      if (this.planetGeometry) this.planetGeometry.dispose();
+      if (this.planetMaterial1) this.planetMaterial1.dispose();
+      if (this.planetMaterial2) this.planetMaterial2.dispose();
+      if (this.deathStarGeometry) this.deathStarGeometry.dispose();
+      if (this.deathStarMaterial) this.deathStarMaterial.dispose();
+      if (this.rockyTexture) this.rockyTexture.dispose();
+      if (this.gasTexture) this.gasTexture.dispose();
+      if (this.deathStarTexture) this.deathStarTexture.dispose();
       if (this.scene) {
-        // Remove all objects from scene
-        while (this.scene.children.length > 0) {
-          const object = this.scene.children[0];
-          this.scene.remove(object);
-          if (object.geometry) object.geometry.dispose();
-          if (object.material) object.material.dispose();
+        while(this.scene.children.length > 0){ 
+            this.scene.remove(this.scene.children[0]); 
         }
       }
     }
   },
 
-  // Extensibility
   additionalElements: []
 };

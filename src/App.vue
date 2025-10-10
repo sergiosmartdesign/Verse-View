@@ -12,13 +12,11 @@ import ThemeSelector from './components/ThemeSelector.vue';
 import InteractiveBackground from './components/InteractiveBackground.vue';
 import ThemedSearchBar from './components/ThemedSearchBar.vue';
 import { matrixTheme } from './themes/matrixTheme.js';
-import { futuramaTheme } from './themes/futuramaTheme.js';
 import { vaderTheme } from './themes/vaderTheme.js';
 import gsap from 'gsap';
 
 const themes = {
   matrix: matrixTheme,
-  futurama: futuramaTheme,
   vader: vaderTheme,
 };
 

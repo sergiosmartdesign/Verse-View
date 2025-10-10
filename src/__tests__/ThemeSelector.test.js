@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import ThemeSelector from '../components/ThemeSelector.vue';
 import { matrixTheme } from '../themes/matrixTheme.js';
-import { futuramaTheme } from '../themes/futuramaTheme.js';
 import { vaderTheme } from '../themes/vaderTheme.js';
 
 describe('ThemeSelector', () => {
@@ -10,10 +9,10 @@ describe('ThemeSelector', () => {
     const wrapper = mount(ThemeSelector);
 
     const buttons = wrapper.findAll('button');
-    expect(buttons.length).toBe(3);
+    expect(buttons.length).toBe(2);
 
     // Click on Vader button
-    await buttons[2].trigger('click');
+    await buttons[1].trigger('click');
 
     expect(wrapper.emitted('themeChanged')).toBeTruthy();
     expect(wrapper.emitted('themeChanged')[0]).toEqual([vaderTheme]);
@@ -24,7 +23,6 @@ describe('ThemeSelector', () => {
 
     const buttons = wrapper.findAll('button');
     expect(buttons[0].text()).toBe('The Matrix');
-    expect(buttons[1].text()).toBe('Futurama');
-    expect(buttons[2].text()).toBe('Vader');
+    expect(buttons[1].text()).toBe('Vader');
   });
 });

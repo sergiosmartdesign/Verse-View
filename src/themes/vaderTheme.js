@@ -227,7 +227,7 @@ export const vaderTheme = {
             }
 
             const orbitRadius = 4875;
-            const orbitSpeed = -0.00002; // <-- FIX: Velocidad de órbita reducida 50 veces
+            const orbitSpeed = -0.00002;
 
             orbitAngle += orbitSpeed;
 
@@ -319,6 +319,78 @@ export const vaderTheme = {
         while(this.scene.children.length > 0){ 
             this.scene.remove(this.scene.children[0]); 
         }
+      }
+    }
+  },
+
+  // ===================================================================
+  // NUEVA CAPA DE SUPERPOSICIÓN (OVERLAY)
+  // ===================================================================
+  overlayLayer: {
+    type: 'svg',
+    
+    // El contenido se cargará dinámicamente desde el archivo.
+    content: '', 
+    
+    styles: {
+      position: 'absolute',
+      top: '0',
+      left: '0',
+      width: '100vw',
+      height: '100vh',
+      'z-index': 10,
+      'pointer-events': 'none',
+    },
+
+    // Función auxiliar para cargar el contenido del archivo SVG
+    async loadSvgContent(svgPath) {
+      try {
+        const response = await fetch(svgPath);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.text();
+      } catch (error) {
+        console.error(`Failed to fetch SVG content from ${svgPath}:`, error);
+        return null;
+      }
+    },
+    
+    animation: {
+      init: async function(element, theme) {
+        if (!element) return;
+        
+        // 1. Cargar el contenido del SVG
+        const svgContent = await theme.overlayLayer.loadSvgContent('/svg/TieAdvance1.svg');
+        
+        // 2. Inyectar el SVG en el elemento del DOM
+        if (svgContent) {
+          element.innerHTML = svgContent;
+          const svgElement = element.querySelector('svg');
+
+          if (svgElement) {
+             // 3. Asegurar que el SVG llene el contenedor sin deformarse
+            svgElement.style.width = '100%';
+            svgElement.style.height = '100%';
+            svgElement.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+          }
+        }
+        
+        // 4. Animar la entrada de la capa
+        gsap.fromTo(element, 
+          { opacity: 0, scale: 1.1 }, 
+          { 
+            opacity: 0.8, // Opacidad sutil para ver el fondo
+            scale: 1,
+            duration: 2.5,
+            ease: 'power2.out'
+          }
+        );
+      },
+      destroy: function(element) {
+        if (!element) return;
+        gsap.killTweensOf(element);
+        element.innerHTML = ''; // Limpiar el contenido al destruir
       }
     }
   },

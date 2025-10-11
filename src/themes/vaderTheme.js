@@ -276,35 +276,14 @@ export const vaderTheme = {
         renderer.render(scene, camera);
       }
       
-      this.scene = scene;
-      this.renderer = renderer;
-      this.starField = starField;
-      this.planet1 = planet1;
-      this.planet2 = planet2;
-      this.deathStar = deathStar;
-      this.starGeometry = starGeometry;
-      this.starMaterial = starMaterial;
-      this.planetGeometry = planetGeometry;
-      this.planetMaterial1 = planetMaterial1;
-      this.planetMaterial2 = planetMaterial2;
-      this.deathStarGeometry = deathStarGeometry;
-      this.deathStarMaterial = deathStarMaterial;
-      this.rockyTexture = rockyTexture;
-      this.gasTexture = gasTexture;
-      this.deathStarTexture = deathStarTexture;
-      this.ambientLight = ambientLight;
-      this.directionalLight = directionalLight;
+      this.scene = scene; this.renderer = renderer; this.starField = starField; this.planet1 = planet1; this.planet2 = planet2; this.deathStar = deathStar; this.starGeometry = starGeometry; this.starMaterial = starMaterial; this.planetGeometry = planetGeometry; this.planetMaterial1 = planetMaterial1; this.planetMaterial2 = planetMaterial2; this.deathStarGeometry = deathStarGeometry; this.deathStarMaterial = deathStarMaterial; this.rockyTexture = rockyTexture; this.gasTexture = gasTexture; this.deathStarTexture = deathStarTexture; this.ambientLight = ambientLight; this.directionalLight = directionalLight;
       
       animate.bind(this)();
     },
 
     destroy: function() {
-      if (this.animationFrameId) {
-        cancelAnimationFrame(this.animationFrameId);
-      }
-      if (this.renderer) {
-        this.renderer.dispose();
-      }
+      if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+      if (this.renderer) this.renderer.dispose();
       if (this.starGeometry) this.starGeometry.dispose();
       if (this.starMaterial) this.starMaterial.dispose();
       if (this.planetGeometry) this.planetGeometry.dispose();
@@ -323,15 +302,9 @@ export const vaderTheme = {
     }
   },
 
-  // ===================================================================
-  // NUEVA CAPA DE SUPERPOSICIÓN (OVERLAY)
-  // ===================================================================
   overlayLayer: {
     type: 'svg',
-    
-    // El contenido se cargará dinámicamente desde el archivo.
     content: '', 
-    
     styles: {
       position: 'absolute',
       top: '0',
@@ -341,56 +314,73 @@ export const vaderTheme = {
       'z-index': 10,
       'pointer-events': 'none',
     },
-
-    // Función auxiliar para cargar el contenido del archivo SVG
     async loadSvgContent(svgPath) {
       try {
         const response = await fetch(svgPath);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         return await response.text();
       } catch (error) {
         console.error(`Failed to fetch SVG content from ${svgPath}:`, error);
         return null;
       }
     },
-    
     animation: {
+      gsapTimeline: null,
+
       init: async function(element, theme) {
         if (!element) return;
         
-        // 1. Cargar el contenido del SVG
         const svgContent = await theme.overlayLayer.loadSvgContent('/svg/TieAdvance1.svg');
         
-        // 2. Inyectar el SVG en el elemento del DOM
         if (svgContent) {
           element.innerHTML = svgContent;
-          const svgElement = element.querySelector('svg');
+          const newSvgElement = element.querySelector('svg');
+          if (newSvgElement) {
+            newSvgElement.style.width = '100%';
+            newSvgElement.style.height = '100%';
+            newSvgElement.setAttribute('preserveAspectRatio', 'xMidYMid slice');
 
-          if (svgElement) {
-             // 3. Asegurar que el SVG llene el contenedor sin deformarse
-            svgElement.style.width = '100%';
-            svgElement.style.height = '100%';
-            svgElement.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+            gsap.fromTo(element, 
+              { opacity: 0, scale: 1.1 }, 
+              { 
+                opacity: 0.8,
+                scale: 1,
+                duration: 2.5,
+                ease: 'power2.out',
+                onComplete: () => {
+                  this.startRotationAnimation(newSvgElement);
+                }
+              }
+            );
           }
         }
-        
-        // 4. Animar la entrada de la capa
-        gsap.fromTo(element, 
-          { opacity: 0, scale: 1.1 }, 
-          { 
-            opacity: 0.8, // Opacidad sutil para ver el fondo
-            scale: 1,
-            duration: 2.5,
-            ease: 'power2.out'
-          }
-        );
       },
+
+      startRotationAnimation: function(svgElement) {
+        gsap.set(svgElement, { transformOrigin: '50% 50%' });
+        
+        this.gsapTimeline = gsap.to(svgElement, {
+          rotation: 2.5,
+          duration: 1.25,
+          yoyo: true,
+          repeat: 1,
+          ease: 'power1.inOut'
+        });
+      },
+
       destroy: function(element) {
-        if (!element) return;
+        if (this.gsapTimeline) {
+          this.gsapTimeline.kill();
+        }
+        const svgElement = element ? element.querySelector('svg') : null;
+        if (svgElement) {
+          gsap.killTweensOf(svgElement);
+        }
         gsap.killTweensOf(element);
-        element.innerHTML = ''; // Limpiar el contenido al destruir
+        
+        if (element) {
+          element.innerHTML = '';
+        }
       }
     }
   },

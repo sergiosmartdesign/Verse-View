@@ -328,6 +328,7 @@ export const vaderTheme = {
       introTimeline: null,
       rotationTimeline: null,
       vibrationTimeline: null,
+      joltsTimeline: null,
 
       init: async function(element, theme) {
         if (!element) return;
@@ -373,45 +374,49 @@ export const vaderTheme = {
         });
       },
 
-      // --- FUNCIÓN CORREGIDA ---
       startVibrationAnimation: function(svgElement) {
-        // CAMBIO CLAVE 1: La timeline ya no tiene una duración fija.
-        // Se ejecutará mientras su contenido se esté ejecutando.
-        this.vibrationTimeline = gsap.timeline();
-
-        this.vibrationTimeline.to(svgElement, {
-          // Aumentamos ligeramente la intensidad para que sea más visible.
-          x: () => gsap.utils.random(-3, 3),
-          y: () => gsap.utils.random(-3, 3),
+        // CAPA 1: VIBRACIÓN BASE CONSTANTE
+        this.vibrationTimeline = gsap.to(svgElement, {
+          x: () => gsap.utils.random(-5, 5),
+          y: () => gsap.utils.random(-5, 5),
+          rotation: () => gsap.utils.random(-0.8, 0.8),
           duration: 0.05,
-          repeat: -1, // La vibración se repetirá indefinidamente...
+          repeat: -1,
           ease: 'none'
-        }, 0);
+        });
 
-        // CAMBIO CLAVE 2: Creamos un temporizador independiente.
-        // Después de 6 segundos, ejecutará una función.
-        gsap.delayedCall(6, () => {
-          // Detiene y limpia la línea de tiempo de la vibración.
-          this.vibrationTimeline.kill();
+        // CAPA 2: SACUDIDAS BRUSCAS PERIÓDICAS
+        this.joltsTimeline = gsap.timeline({
+          repeat: -1,
+          repeatDelay: 0.4
+        }).to(svgElement, {
+          x: () => gsap.utils.random(-12, 12),
+          y: () => gsap.utils.random(-12, 12),
+          duration: 0.04,
+          ease: 'power4.inOut'
+        });
+
+        // TEMPORIZADOR SINCRONIZADO: Se detiene a los 7 segundos
+        gsap.delayedCall(7, () => {
+          if (this.vibrationTimeline) this.vibrationTimeline.kill();
+          if (this.joltsTimeline) this.joltsTimeline.kill();
           
-          // BONUS: Suaviza el retorno a la posición original (0,0)
-          // para una transición de salida limpia.
           gsap.to(svgElement, {
             duration: 0.5,
             x: 0,
             y: 0,
+            rotation: 0,
             ease: 'power2.out'
           });
         });
       },
-      // --- FIN DE LA FUNCIÓN CORREGIDA ---
 
       destroy: function(element) {
         if (this.introTimeline) this.introTimeline.kill();
         if (this.rotationTimeline) this.rotationTimeline.kill();
         if (this.vibrationTimeline) this.vibrationTimeline.kill();
+        if (this.joltsTimeline) this.joltsTimeline.kill();
         
-        // Detiene también cualquier delayedCall pendiente
         gsap.killTweensOf(this.startVibrationAnimation);
 
         const svgElement = element ? element.querySelector('svg') : null;

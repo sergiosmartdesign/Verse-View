@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import gsap from 'gsap';
+import { Back } from 'gsap';
 
 export const vaderTheme = {
   themeId: 'vader',
@@ -75,7 +76,6 @@ export const vaderTheme = {
         this.loadSvgTexture('/svg/rocky-planet.svg'),
         this.loadSvgTexture('/svg/star-killer.svg')
       ]);
-      
       const rockyCanvas = document.createElement('canvas');
       rockyCanvas.width = 512; rockyCanvas.height = 256;
       const rockyCtx = rockyCanvas.getContext('2d');
@@ -83,13 +83,11 @@ export const vaderTheme = {
       for (let i = 0; i < 3000; i++) { const x = Math.random() * 512; const y = Math.random() * 256; const alpha = Math.random() * 0.3 + 0.1; rockyCtx.fillStyle = Math.random() > 0.5 ? `rgba(255, 255, 0, ${alpha})` : `rgba(255, 100, 0, ${alpha})`; rockyCtx.fillRect(x, y, 3, 3); }
       if (rockyPlanetSvg) { rockyCtx.globalAlpha = 0.3; rockyCtx.globalCompositeOperation = 'multiply'; rockyCtx.drawImage(rockyPlanetSvg, 0, 0, 512, 256); rockyCtx.globalAlpha = 1.0; rockyCtx.globalCompositeOperation = 'source-over'; }
       const rockyTexture = new THREE.CanvasTexture(rockyCanvas);
-      
       const gasCanvas = document.createElement('canvas');
       gasCanvas.width = 512; gasCanvas.height = 256;
       const gasCtx = gasCanvas.getContext('2d');
       if (gasPlanetSvg) { gasCtx.drawImage(gasPlanetSvg, 0, 0, 512, 256); }
       const gasTexture = new THREE.CanvasTexture(gasCanvas);
-
       const deathStarCanvas = document.createElement('canvas');
       deathStarCanvas.width = 1024;
       deathStarCanvas.height = 512;
@@ -100,7 +98,7 @@ export const vaderTheme = {
         deathStarCtx.drawImage(deathStarSvg, 0, 0, 1024, 512);
       }
       const deathStarTexture = new THREE.CanvasTexture(deathStarCanvas);
-
+      
       const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
       scene.add(ambientLight);
       const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -116,16 +114,10 @@ export const vaderTheme = {
       const planet2 = new THREE.Mesh(planetGeometry, planetMaterial2);
       planet2.position.set(-300, -100, -600);
       scene.add(planet2);
-
       const deathStarGeometry = new THREE.SphereGeometry(300, 64, 64);
-      const deathStarMaterial = new THREE.MeshLambertMaterial({ 
-          map: deathStarTexture,
-          transparent: true,
-          opacity: 0 
-      });
+      const deathStarMaterial = new THREE.MeshLambertMaterial({ map: deathStarTexture, transparent: true, opacity: 0 });
       const deathStar = new THREE.Mesh(deathStarGeometry, deathStarMaterial);
       scene.add(deathStar);
-
       const starCount = 5000;
       const starPositions = []; 
       const lineVertices = new Float32Array(starCount * 6); 
@@ -135,17 +127,46 @@ export const vaderTheme = {
         const z = (Math.random() - 0.5) * 4000;
         starPositions.push({ x, y, z, velocity: 0 });
       }
-      
       const starGeometry = new THREE.BufferGeometry();
       starGeometry.setAttribute('position', new THREE.BufferAttribute(lineVertices, 3));
-      const starMaterial = new THREE.LineBasicMaterial({
-        color: 0xffffff,
-        transparent: true,
-        opacity: 0.8,
-        blending: THREE.AdditiveBlending,
-      });
+      const starMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
       const starField = new THREE.LineSegments(starGeometry, starMaterial);
       scene.add(starField);
+
+      // --- Textura del túnel con colores mejorados ---
+      const tubeTextureCanvas = document.createElement('canvas');
+      tubeTextureCanvas.width = 512;
+      tubeTextureCanvas.height = 512;
+      const tubeTextureContext = tubeTextureCanvas.getContext('2d');
+      tubeTextureContext.fillStyle = '#000000';
+      tubeTextureContext.fillRect(0, 0, 512, 512);
+      // Rayas azules más pronunciadas
+      for (let i = 0; i < 2000; i++) {
+          tubeTextureContext.fillStyle = `rgba(0, 150, 255, ${Math.random() * 0.3 + 0.1})`; // Azul más fuerte
+          tubeTextureContext.fillRect(Math.random() * 512, Math.random() * 512, 2, Math.random() * 150 + 50);
+      }
+      // Rayas blancas para contraste
+      for (let i = 0; i < 500; i++) {
+          tubeTextureContext.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.2 + 0.05})`;
+          tubeTextureContext.fillRect(Math.random() * 512, Math.random() * 512, 1, Math.random() * 200 + 100);
+      }
+      const tubeTexture = new THREE.CanvasTexture(tubeTextureCanvas);
+      tubeTexture.wrapS = THREE.RepeatWrapping;
+      tubeTexture.wrapT = THREE.RepeatWrapping;
+      tubeTexture.repeat.set(10, 4);
+
+      const tubeCurve = new THREE.LineCurve3(new THREE.Vector3(0, 0, 1000), new THREE.Vector3(0, 0, -3000));
+      const tubeGeometry = new THREE.TubeGeometry(tubeCurve, 100, 40, 12, false);
+      const tubeMaterial = new THREE.MeshBasicMaterial({
+          map: tubeTexture,
+          side: THREE.BackSide,
+          transparent: true,
+          opacity: 0, 
+          blending: THREE.AdditiveBlending
+      });
+      const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
+      scene.add(tube);
+      let tubeSpeed = { value: 0 };
       
       camera.position.z = 1000;
       
@@ -153,7 +174,6 @@ export const vaderTheme = {
       let phase = 'static';
       let phaseStartTime = Date.now();
       let sphereComputed = false;
-      
       let orbitAngle = 0;
       let orbitInitialized = false;
 
@@ -162,8 +182,9 @@ export const vaderTheme = {
         
         const currentTime = Date.now();
         const elapsed = (currentTime - phaseStartTime) / 1000;
-
-        if (phase === 'static' && elapsed > 5) {
+        
+        // --- Se retrasa el inicio del salto a los 6 segundos ---
+        if (phase === 'static' && elapsed > 6) {
             phase = 'jump';
             phaseStartTime = currentTime;
             
@@ -171,6 +192,12 @@ export const vaderTheme = {
             gsap.to(planet2.scale, { x: 0.01, y: 0.01, z: 0.01, duration: 1.5, onComplete: () => planet2.visible = false });
             gsap.to(starMaterial.color, { r: 0.5, g: 0.7, b: 1.0, duration: 3.0 });
             gsap.to(cameraSpeed, { value: 20, duration: 3.0 });
+
+            // Animar el túnel para que aparezca (fade in) y acelere
+            gsap.to(tube.material, { opacity: 0.7, duration: 2.5, ease: 'power2.out' });
+            gsap.timeline()
+              .to(tubeSpeed, { value: 0.25, duration: 4.5, ease: 'power2.in' })
+              .to(tubeSpeed, { value: 0, duration: 3, ease: 'power2.out' });
         }
 
         if (phase === 'jump') {
@@ -178,17 +205,16 @@ export const vaderTheme = {
                 starGeometry.computeBoundingSphere();
                 sphereComputed = true;
             }
+             // Animar el túnel para que desaparezca (fade out) antes de llegar
+            if (elapsed > 5.5) {
+                 gsap.to(tube.material, { opacity: 0, duration: 1.5, ease: 'power2.in' });
+            }
 
             if (elapsed > 7) {
                 phase = 'arrival';
                 phaseStartTime = currentTime;
                 
-                deathStar.position.set(
-                    camera.position.x + 100, 
-                    camera.position.y + 50, 
-                    camera.position.z - 4875
-                );
-                
+                deathStar.position.set(camera.position.x + 100, camera.position.y + 50, camera.position.z - 4875);
                 for(const star of starPositions) {
                     star.velocity = 0;
                     star.x = (Math.random() - 0.5) * 4000 + camera.position.x;
@@ -212,93 +238,74 @@ export const vaderTheme = {
         if (phase !== 'final') {
           camera.position.z -= cameraSpeed.value;
         }
-
         if (phase === 'static') {
             planet1.rotation.y += 0.005;
             planet2.rotation.y += 0.003;
         }
-        
         if (phase === 'final') {
             deathStar.rotation.y += 0.001;
-
             if (!orbitInitialized) {
                 orbitAngle = Math.atan2(camera.position.x - deathStar.position.x, camera.position.z - deathStar.position.z);
                 orbitInitialized = true;
             }
-
             const orbitRadius = 4875;
             const orbitSpeed = -0.00002;
-
             orbitAngle += orbitSpeed;
-
             camera.position.x = deathStar.position.x + Math.sin(orbitAngle) * orbitRadius;
             camera.position.z = deathStar.position.z + Math.cos(orbitAngle) * orbitRadius;
-            
             camera.lookAt(deathStar.position);
         }
         
         const currentLineVertices = starGeometry.attributes.position.array;
         for (let i = 0; i < starCount; i++) {
             const star = starPositions[i];
-
-            if (phase === 'jump') { 
-                star.velocity += 0.15; 
-            } else if (phase === 'arrival') {
-                star.velocity *= 0.95;
-            } else if (phase === 'final') {
-                star.velocity = 0;
-            }
-
+            if (phase === 'jump') { star.velocity += 0.15; }
+            else if (phase === 'arrival') { star.velocity *= 0.95; }
+            else if (phase === 'final') { star.velocity = 0; }
             star.z += star.velocity;
-
             let lineLength = 1.5;
-            if (phase === 'jump') { 
-                lineLength += star.velocity * 5; 
-            }
-
+            if (phase === 'jump') { lineLength += star.velocity * 5; }
             const i6 = i * 6;
             currentLineVertices[i6] = star.x; currentLineVertices[i6 + 1] = star.y; currentLineVertices[i6 + 2] = star.z;
             currentLineVertices[i6 + 3] = star.x; currentLineVertices[i6 + 4] = star.y; currentLineVertices[i6 + 5] = star.z - lineLength;
-            
             if (star.z > camera.position.z) {
                 star.z = camera.position.z - 4000;
                 star.x = (Math.random() - 0.5) * 4000 + camera.position.x;
                 star.y = (Math.random() - 0.5) * 4000 + camera.position.y;
-                
-                if (phase === 'jump') { 
-                    star.velocity = Math.random() * 10 + 5; 
-                } else { 
-                    star.velocity = 0; 
-                }
+                if (phase === 'jump') { star.velocity = Math.random() * 10 + 5; }
+                else { star.velocity = 0; }
             }
         }
         starGeometry.attributes.position.needsUpdate = true;
+        
+        tube.material.map.offset.y -= tubeSpeed.value;
+
         renderer.render(scene, camera);
       }
       
-      this.scene = scene; this.renderer = renderer; this.starField = starField; this.planet1 = planet1; this.planet2 = planet2; this.deathStar = deathStar; this.starGeometry = starGeometry; this.starMaterial = starMaterial; this.planetGeometry = planetGeometry; this.planetMaterial1 = planetMaterial1; this.planetMaterial2 = planetMaterial2; this.deathStarGeometry = deathStarGeometry; this.deathStarMaterial = deathStarMaterial; this.rockyTexture = rockyTexture; this.gasTexture = gasTexture; this.deathStarTexture = deathStarTexture; this.ambientLight = ambientLight; this.directionalLight = directionalLight;
+      this.scene = scene;
+      this.renderer = renderer;
+      this.tube = tube; 
       
       animate.bind(this)();
     },
 
     destroy: function() {
       if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
-      if (this.renderer) this.renderer.dispose();
-      if (this.starGeometry) this.starGeometry.dispose();
-      if (this.starMaterial) this.starMaterial.dispose();
-      if (this.planetGeometry) this.planetGeometry.dispose();
-      if (this.planetMaterial1) this.planetMaterial1.dispose();
-      if (this.planetMaterial2) this.planetMaterial2.dispose();
-      if (this.deathStarGeometry) this.deathStarGeometry.dispose();
-      if (this.deathStarMaterial) this.deathStarMaterial.dispose();
-      if (this.rockyTexture) this.rockyTexture.dispose();
-      if (this.gasTexture) this.gasTexture.dispose();
-      if (this.deathStarTexture) this.deathStarTexture.dispose();
+      
       if (this.scene) {
+        this.scene.traverse(object => {
+          if (object.geometry) object.geometry.dispose();
+          if (object.material) {
+            if (object.material.map) object.material.map.dispose();
+            object.material.dispose();
+          }
+        });
         while(this.scene.children.length > 0){ 
             this.scene.remove(this.scene.children[0]); 
         }
       }
+      if (this.renderer) this.renderer.dispose();
     }
   },
 
@@ -375,7 +382,6 @@ export const vaderTheme = {
       },
 
       startVibrationAnimation: function(svgElement) {
-        // CAPA 1: VIBRACIÓN BASE CONSTANTE
         this.vibrationTimeline = gsap.to(svgElement, {
           x: () => gsap.utils.random(-5, 5),
           y: () => gsap.utils.random(-5, 5),
@@ -385,7 +391,6 @@ export const vaderTheme = {
           ease: 'none'
         });
 
-        // CAPA 2: SACUDIDAS BRUSCAS PERIÓDICAS
         this.joltsTimeline = gsap.timeline({
           repeat: -1,
           repeatDelay: 0.4
@@ -395,18 +400,21 @@ export const vaderTheme = {
           duration: 0.04,
           ease: 'power4.inOut'
         });
-
-        // TEMPORIZADOR SINCRONIZADO: Se detiene a los 7 segundos
-        gsap.delayedCall(7, () => {
+        
+        gsap.delayedCall(4.5, () => {
           if (this.vibrationTimeline) this.vibrationTimeline.kill();
           if (this.joltsTimeline) this.joltsTimeline.kill();
           
           gsap.to(svgElement, {
-            duration: 0.5,
+            duration: 1.5,
             x: 0,
             y: 0,
             rotation: 0,
-            ease: 'power2.out'
+            scale: 0.98,
+            ease: Back.easeOut.config(2),
+            onComplete: () => {
+                 gsap.to(svgElement, { scale: 1, duration: 0.5, ease: 'power1.out' });
+            }
           });
         });
       },
@@ -416,20 +424,20 @@ export const vaderTheme = {
         if (this.rotationTimeline) this.rotationTimeline.kill();
         if (this.vibrationTimeline) this.vibrationTimeline.kill();
         if (this.joltsTimeline) this.joltsTimeline.kill();
-        
         gsap.killTweensOf(this.startVibrationAnimation);
-
         const svgElement = element ? element.querySelector('svg') : null;
         if (svgElement) {
           gsap.killTweensOf(svgElement);
         }
         gsap.killTweensOf(element);
-        
         if (element) {
           element.innerHTML = '';
         }
       }
     }
   },
+
+  vortexLayer: null, 
+
   additionalElements: []
 };

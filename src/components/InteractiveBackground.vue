@@ -1,9 +1,11 @@
 <template>
   <div class="background-container">
     <canvas ref="canvasEl" class="background-canvas"></canvas>
-    
-    <div 
-      v-if="theme.overlayLayer" 
+
+    <!-- El canvas del vortex ha sido eliminado -->
+
+    <div
+      v-if="theme.overlayLayer"
       ref="overlayEl"
       :style="theme.overlayLayer.styles">
     </div>
@@ -19,15 +21,18 @@ const props = defineProps({
 
 // Referencias a los elementos del DOM
 const canvasEl = ref(null);
+// La referencia a vortexEl ha sido eliminada
 const overlayEl = ref(null);
 
 onMounted(() => {
-  // 1. Inicializa la animación de fondo (Three.js)
+  // 1. Inicializa la animación de fondo (que ahora incluye el túnel)
   if (canvasEl.value && props.theme.backgroundAnimation?.init) {
     props.theme.backgroundAnimation.init(canvasEl.value, props.theme);
   }
-  
-  // 2. Inicializa la animación de la capa de superposición (SVG)
+
+  // 2. La inicialización del vortex ha sido eliminada
+
+  // 3. Inicializa la animación de la capa de superposición (SVG)
   if (overlayEl.value && props.theme.overlayLayer?.animation?.init) {
     props.theme.overlayLayer.animation.init(overlayEl.value, props.theme);
   }
@@ -39,7 +44,9 @@ onUnmounted(() => {
     props.theme.backgroundAnimation.destroy();
   }
 
-  // 2. Destruye la animación de la capa de superposición
+  // 2. La destrucción del vortex ha sido eliminada
+
+  // 3. Destruye la animación de la capa de superposición
   if (props.theme.overlayLayer?.animation?.destroy) {
     props.theme.overlayLayer.animation.destroy(overlayEl.value);
   }
@@ -53,8 +60,8 @@ onUnmounted(() => {
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: -1; /* Coloca todo el contenedor detrás del contenido principal (barra de búsqueda) */
-  background-color: var(--theme-background, black); /* Color de fondo de respaldo */
+  z-index: -1;
+  background-color: var(--theme-background, black);
 }
 
 .background-canvas {
@@ -63,6 +70,5 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  /* El z-index se maneja por el orden en el DOM y el z-index del overlay */
 }
 </style>

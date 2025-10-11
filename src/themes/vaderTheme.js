@@ -325,7 +325,9 @@ export const vaderTheme = {
       }
     },
     animation: {
-      gsapTimeline: null,
+      introTimeline: null,
+      rotationTimeline: null,
+      vibrationTimeline: null,
 
       init: async function(element, theme) {
         if (!element) return;
@@ -340,7 +342,7 @@ export const vaderTheme = {
             newSvgElement.style.height = '100%';
             newSvgElement.setAttribute('preserveAspectRatio', 'xMidYMid slice');
 
-            gsap.fromTo(element, 
+            this.introTimeline = gsap.fromTo(element, 
               { opacity: 0, scale: 1.1 }, 
               { 
                 opacity: 0.8,
@@ -359,19 +361,59 @@ export const vaderTheme = {
       startRotationAnimation: function(svgElement) {
         gsap.set(svgElement, { transformOrigin: '50% 50%' });
         
-        this.gsapTimeline = gsap.to(svgElement, {
+        this.rotationTimeline = gsap.to(svgElement, {
           rotation: 2.5,
           duration: 1.25,
           yoyo: true,
           repeat: 1,
-          ease: 'power1.inOut'
+          ease: 'power1.inOut',
+          onComplete: () => {
+            this.startVibrationAnimation(svgElement);
+          }
         });
       },
 
+      // --- FUNCIÓN CORREGIDA ---
+      startVibrationAnimation: function(svgElement) {
+        // CAMBIO CLAVE 1: La timeline ya no tiene una duración fija.
+        // Se ejecutará mientras su contenido se esté ejecutando.
+        this.vibrationTimeline = gsap.timeline();
+
+        this.vibrationTimeline.to(svgElement, {
+          // Aumentamos ligeramente la intensidad para que sea más visible.
+          x: () => gsap.utils.random(-3, 3),
+          y: () => gsap.utils.random(-3, 3),
+          duration: 0.05,
+          repeat: -1, // La vibración se repetirá indefinidamente...
+          ease: 'none'
+        }, 0);
+
+        // CAMBIO CLAVE 2: Creamos un temporizador independiente.
+        // Después de 6 segundos, ejecutará una función.
+        gsap.delayedCall(6, () => {
+          // Detiene y limpia la línea de tiempo de la vibración.
+          this.vibrationTimeline.kill();
+          
+          // BONUS: Suaviza el retorno a la posición original (0,0)
+          // para una transición de salida limpia.
+          gsap.to(svgElement, {
+            duration: 0.5,
+            x: 0,
+            y: 0,
+            ease: 'power2.out'
+          });
+        });
+      },
+      // --- FIN DE LA FUNCIÓN CORREGIDA ---
+
       destroy: function(element) {
-        if (this.gsapTimeline) {
-          this.gsapTimeline.kill();
-        }
+        if (this.introTimeline) this.introTimeline.kill();
+        if (this.rotationTimeline) this.rotationTimeline.kill();
+        if (this.vibrationTimeline) this.vibrationTimeline.kill();
+        
+        // Detiene también cualquier delayedCall pendiente
+        gsap.killTweensOf(this.startVibrationAnimation);
+
         const svgElement = element ? element.querySelector('svg') : null;
         if (svgElement) {
           gsap.killTweensOf(svgElement);
@@ -384,6 +426,5 @@ export const vaderTheme = {
       }
     }
   },
-
   additionalElements: []
 };

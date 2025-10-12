@@ -46,6 +46,7 @@ export const vaderTheme = {
   // Logic
   backgroundAnimation: {
     animationFrameId: null,
+    theme: null, // Referencia al tema para acceder a otras capas
 
     async loadSvgTexture(svgPath) {
       try {
@@ -65,6 +66,8 @@ export const vaderTheme = {
     },
 
     init: async function(canvas, theme) {
+      this.theme = theme; // Guardamos la referencia al tema
+
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 15000);
       const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
@@ -132,41 +135,6 @@ export const vaderTheme = {
       const starMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
       const starField = new THREE.LineSegments(starGeometry, starMaterial);
       scene.add(starField);
-
-      // --- Textura del túnel con colores mejorados ---
-      const tubeTextureCanvas = document.createElement('canvas');
-      tubeTextureCanvas.width = 512;
-      tubeTextureCanvas.height = 512;
-      const tubeTextureContext = tubeTextureCanvas.getContext('2d');
-      tubeTextureContext.fillStyle = '#000000';
-      tubeTextureContext.fillRect(0, 0, 512, 512);
-      // Rayas azules más pronunciadas
-      for (let i = 0; i < 2000; i++) {
-          tubeTextureContext.fillStyle = `rgba(0, 150, 255, ${Math.random() * 0.3 + 0.1})`; // Azul más fuerte
-          tubeTextureContext.fillRect(Math.random() * 512, Math.random() * 512, 2, Math.random() * 150 + 50);
-      }
-      // Rayas blancas para contraste
-      for (let i = 0; i < 500; i++) {
-          tubeTextureContext.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.2 + 0.05})`;
-          tubeTextureContext.fillRect(Math.random() * 512, Math.random() * 512, 1, Math.random() * 200 + 100);
-      }
-      const tubeTexture = new THREE.CanvasTexture(tubeTextureCanvas);
-      tubeTexture.wrapS = THREE.RepeatWrapping;
-      tubeTexture.wrapT = THREE.RepeatWrapping;
-      tubeTexture.repeat.set(10, 4);
-
-      const tubeCurve = new THREE.LineCurve3(new THREE.Vector3(0, 0, 1000), new THREE.Vector3(0, 0, -3000));
-      const tubeGeometry = new THREE.TubeGeometry(tubeCurve, 100, 40, 12, false);
-      const tubeMaterial = new THREE.MeshBasicMaterial({
-          map: tubeTexture,
-          side: THREE.BackSide,
-          transparent: true,
-          opacity: 0, 
-          blending: THREE.AdditiveBlending
-      });
-      const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
-      scene.add(tube);
-      let tubeSpeed = { value: 0 };
       
       camera.position.z = 1000;
       
@@ -183,7 +151,6 @@ export const vaderTheme = {
         const currentTime = Date.now();
         const elapsed = (currentTime - phaseStartTime) / 1000;
         
-        // --- Se retrasa el inicio del salto a los 6 segundos ---
         if (phase === 'static' && elapsed > 6) {
             phase = 'jump';
             phaseStartTime = currentTime;
@@ -193,11 +160,9 @@ export const vaderTheme = {
             gsap.to(starMaterial.color, { r: 0.5, g: 0.7, b: 1.0, duration: 3.0 });
             gsap.to(cameraSpeed, { value: 20, duration: 3.0 });
 
-            // Animar el túnel para que aparezca (fade in) y acelere
-            gsap.to(tube.material, { opacity: 0.7, duration: 2.5, ease: 'power2.out' });
-            gsap.timeline()
-              .to(tubeSpeed, { value: 0.25, duration: 4.5, ease: 'power2.in' })
-              .to(tubeSpeed, { value: 0, duration: 3, ease: 'power2.out' });
+            // Inicia la animación del vórtice
+            // 2. A los 6 segundos, empieza el fade in
+            this.theme.vortexLayer.animation.fadeIn();
         }
 
         if (phase === 'jump') {
@@ -205,27 +170,20 @@ export const vaderTheme = {
                 starGeometry.computeBoundingSphere();
                 sphereComputed = true;
             }
-             // Animar el túnel para que desaparezca (fade out) antes de llegar
-            if (elapsed > 5.5) {
-                 gsap.to(tube.material, { opacity: 0, duration: 1.5, ease: 'power2.in' });
-            }
-
             if (elapsed > 7) {
                 phase = 'arrival';
                 phaseStartTime = currentTime;
                 
                 deathStar.position.set(camera.position.x + 100, camera.position.y + 50, camera.position.z - 4875);
-                for(const star of starPositions) {
-                    star.velocity = 0;
-                    star.x = (Math.random() - 0.5) * 4000 + camera.position.x;
-                    star.y = (Math.random() - 0.5) * 4000 + camera.position.y;
-                    star.z = camera.position.z - Math.random() * 4000;
-                }
+                for(const star of starPositions) { star.velocity = 0; star.x = (Math.random() - 0.5) * 4000 + camera.position.x; star.y = (Math.random() - 0.5) * 4000 + camera.position.y; star.z = camera.position.z - Math.random() * 4000; }
                 starGeometry.computeBoundingSphere();
 
                 gsap.to(cameraSpeed, { value: 0, duration: 3.0, ease: 'power2.out' });
                 gsap.to(starMaterial.color, { r: 1.0, g: 1.0, b: 1.0, duration: 3.0 });
                 gsap.to(deathStar.material, { opacity: 1, duration: 3.0 });
+
+                // Desvanece el vórtice
+                this.theme.vortexLayer.animation.fadeOut(); // 3. Inicia el fade out
             }
         }
         
@@ -278,14 +236,11 @@ export const vaderTheme = {
         }
         starGeometry.attributes.position.needsUpdate = true;
         
-        tube.material.map.offset.y -= tubeSpeed.value;
-
         renderer.render(scene, camera);
       }
       
       this.scene = scene;
       this.renderer = renderer;
-      this.tube = tube; 
       
       animate.bind(this)();
     },
@@ -437,7 +392,86 @@ export const vaderTheme = {
     }
   },
 
-  vortexLayer: null, 
+  vortexLayer: {
+    type: 'svg',
+    styles: {
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      width: '100vmax', // Usa vmax para asegurar que cubra la pantalla en cualquier orientación
+      height: '100vmax',
+      transform: 'translate(-50%, -50%)',
+      'z-index': 5, // Detrás del caza TIE (10), delante del fondo 3D (-1)
+      'pointer-events': 'none',
+      opacity: 0, // Empieza invisible
+      'mix-blend-mode': 'screen', // Blend mode para un efecto más integrado
+    },
+    async loadSvgContent(svgPath) {
+      try {
+        const response = await fetch(svgPath);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.text();
+      } catch (error) {
+        console.error(`Failed to fetch SVG content from ${svgPath}:`, error);
+        return null;
+      }
+    },
+    animation: {
+      element: null, // Referencia al elemento del DOM
+      rotationTimeline: null,
+      rotationSpeed: 15, // Variable para controlar la velocidad de rotación (menor es más rápido)
+
+      init: async function(element, theme) {
+        if (!element) return;
+        this.element = element; // Guardamos la referencia al elemento
+        
+        const svgContent = await theme.vortexLayer.loadSvgContent('/svg/vortex.svg');
+        if (svgContent) {
+          this.element.innerHTML = svgContent;
+          const svgElement = this.element.querySelector('svg');
+          if (svgElement) {
+            svgElement.style.width = '100%';
+            svgElement.style.height = '100%';
+            // Asegura que el SVG se escale correctamente sin deformarse
+            svgElement.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+
+            // 1. El SVG empieza a girar inmediatamente pero de forma invisible
+            this.startRotation();
+          }
+        }
+      },
+
+      fadeIn: function() {
+        if (!this.element) return;
+        // Fade in de 3 segundos hasta un 50% de opacidad
+        gsap.to(this.element, { opacity: 0.5, duration: 3.0, ease: 'power2.out' });
+      },
+
+      fadeOut: function() {
+        if (!this.element) return;
+        // Fade out de 2 segundos hasta desaparecer
+        gsap.to(this.element, { opacity: 0, duration: 2.0, ease: 'power2.inOut' });
+      },
+
+      startRotation: function() {
+        if (!this.element) return;
+        // Asegura que la rotación tenga como eje el centro del elemento
+        gsap.set(this.element, { transformOrigin: '50% 50%' });
+        this.rotationTimeline = gsap.to(this.element, { rotation: 360, duration: this.rotationSpeed,
+          repeat: -1, // Repetir indefinidamente
+          ease: 'none'
+        });
+      },
+
+      destroy: function() {
+        if (this.rotationTimeline) this.rotationTimeline.kill();
+        if (this.element) {
+          gsap.killTweensOf(this.element);
+          this.element.innerHTML = '';
+        }
+      }
+    }
+  },
 
   additionalElements: []
 };

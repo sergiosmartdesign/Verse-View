@@ -1,8 +1,12 @@
 <template>
   <div class="background-container">
     <canvas ref="canvasEl" class="background-canvas"></canvas>
-
-    <!-- El canvas del vortex ha sido eliminado -->
+    
+    <div
+      v-if="theme.vortexLayer"
+      ref="vortexEl"
+      :style="theme.vortexLayer.styles">
+    </div>
 
     <div
       v-if="theme.overlayLayer"
@@ -13,7 +17,7 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref, defineProps } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 
 const props = defineProps({
   theme: Object
@@ -21,16 +25,19 @@ const props = defineProps({
 
 // Referencias a los elementos del DOM
 const canvasEl = ref(null);
-// La referencia a vortexEl ha sido eliminada
+const vortexEl = ref(null);
 const overlayEl = ref(null);
 
 onMounted(() => {
-  // 1. Inicializa la animación de fondo (que ahora incluye el túnel)
+  // 1. Inicializa la animación de fondo 3D
   if (canvasEl.value && props.theme.backgroundAnimation?.init) {
     props.theme.backgroundAnimation.init(canvasEl.value, props.theme);
   }
 
-  // 2. La inicialización del vortex ha sido eliminada
+  // 2. Inicializa la nueva capa del vórtice
+  if (vortexEl.value && props.theme.vortexLayer?.animation?.init) {
+    props.theme.vortexLayer.animation.init(vortexEl.value, props.theme);
+  }
 
   // 3. Inicializa la animación de la capa de superposición (SVG)
   if (overlayEl.value && props.theme.overlayLayer?.animation?.init) {
@@ -39,12 +46,15 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  // 1. Destruye la animación de fondo para liberar memoria
+  // 1. Destruye la animación de fondo 3D
   if (props.theme.backgroundAnimation?.destroy) {
     props.theme.backgroundAnimation.destroy();
   }
 
-  // 2. La destrucción del vortex ha sido eliminada
+  // 2. Destruye la capa del vórtice
+  if (props.theme.vortexLayer?.animation?.destroy) {
+    props.theme.vortexLayer.animation.destroy();
+  }
 
   // 3. Destruye la animación de la capa de superposición
   if (props.theme.overlayLayer?.animation?.destroy) {

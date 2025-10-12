@@ -163,11 +163,16 @@ export const vaderTheme = {
             // Inicia la animación del vórtice
             // 2. A los 6 segundos, empieza el fade in
             this.theme.vortexLayer.animation.fadeIn();
+            this.theme.vortexLayer.animation.setSpeed('jump'); // Cambia a velocidad rápida
         }
 
         if (phase === 'jump') {
             if (elapsed > 3.5 && !sphereComputed) {
                 starGeometry.computeBoundingSphere();
+                
+                // Inicia el fade intermedio a mitad del salto
+                this.theme.vortexLayer.animation.fadeIntermedio();
+
                 sphereComputed = true;
             }
             if (elapsed > 7) {
@@ -184,6 +189,7 @@ export const vaderTheme = {
 
                 // Desvanece el vórtice
                 this.theme.vortexLayer.animation.fadeOut(); // 3. Inicia el fade out
+                this.theme.vortexLayer.animation.setSpeed('final'); // Cambia a velocidad lenta
             }
         }
         
@@ -419,7 +425,12 @@ export const vaderTheme = {
     animation: {
       element: null, // Referencia al elemento del DOM
       rotationTimeline: null,
-      rotationSpeed: 15, // Variable para controlar la velocidad de rotación (menor es más rápido)
+      // Objeto para controlar las velocidades en cada fase
+      speeds: {
+        initial: 0.9, // Velocidad inicial 
+        jump: 0.5,     // Velocidad media
+        final: 1    // Velocidad final
+      },
 
       init: async function(element, theme) {
         if (!element) return;
@@ -443,24 +454,38 @@ export const vaderTheme = {
 
       fadeIn: function() {
         if (!this.element) return;
-        // Fade in de 3 segundos hasta un 50% de opacidad
-        gsap.to(this.element, { opacity: 0.5, duration: 3.0, ease: 'power2.out' });
+        // Ajuste: Fade in más rápido a una opacidad mayor
+        gsap.to(this.element, { opacity: 0.2, duration: 6, ease: 'power2.out' });
+      },
+
+      // Nuevo: Fade intermedio para variar la opacidad durante el salto
+      fadeIntermedio: function() {
+        if (!this.element) return;
+        gsap.to(this.element, { opacity: 0.3, duration: 7, ease: 'power2.inOut' });
       },
 
       fadeOut: function() {
         if (!this.element) return;
-        // Fade out de 2 segundos hasta desaparecer
-        gsap.to(this.element, { opacity: 0, duration: 2.0, ease: 'power2.inOut' });
+        // Ajuste: Fade out un poco más largo para una transición más suave
+        gsap.to(this.element, { opacity: 0, duration: 3.0, ease: 'power2.inOut' });
       },
 
       startRotation: function() {
         if (!this.element) return;
         // Asegura que la rotación tenga como eje el centro del elemento
         gsap.set(this.element, { transformOrigin: '50% 50%' });
-        this.rotationTimeline = gsap.to(this.element, { rotation: 360, duration: this.rotationSpeed,
+        // La duración inicial se establece con la velocidad 'initial'
+        this.rotationTimeline = gsap.to(this.element, { rotation: 360, duration: this.speeds.initial,
           repeat: -1, // Repetir indefinidamente
           ease: 'none'
         });
+      },
+
+      // Nueva función para cambiar la velocidad de la rotación
+      setSpeed: function(phase) {
+        if (this.rotationTimeline && this.speeds[phase]) {
+          gsap.to(this.rotationTimeline, { duration: 0.5, timeScale: this.speeds.initial / this.speeds[phase] });
+        }
       },
 
       destroy: function() {

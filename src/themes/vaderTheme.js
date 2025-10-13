@@ -194,11 +194,26 @@ export const vaderTheme = {
         }
         
         if (phase === 'arrival' && elapsed > 3) {
-            phase = 'final';
+            phase = 'travel'; // 1. Cambiamos a la nueva fase 'travel' en lugar de 'final'
+            phaseStartTime = currentTime;
             gsap.killTweensOf(cameraSpeed);
             cameraSpeed.value = 0; 
         }
         
+        // 2. Se añade la lógica para la nueva fase 'travel'
+        if (phase === 'travel') {
+            // Durante esta fase, la cámara puede tener un movimiento muy sutil
+            camera.position.z -= 0.1;
+            
+            // Llama a la animación de viaje del caza TIE (solo la primera vez)
+            if (!this.theme.overlayLayer.animation.travelTimeline)
+                this.theme.overlayLayer.animation.travelAnimation();
+
+            if (elapsed > 5) { // Duración de la fase 'travel' de 5 segundos
+                phase = 'final'; // 3. Después de 5s, pasamos a la fase final de órbita
+            }
+        }
+
         if (phase !== 'final') {
           camera.position.z -= cameraSpeed.value;
         }
@@ -297,9 +312,12 @@ export const vaderTheme = {
       rotationTimeline: null,
       vibrationTimeline: null,
       joltsTimeline: null,
+      travelTimeline: null, // Referencia para la nueva animación
+      element: null, // Referencia al elemento SVG
 
       init: async function(element, theme) {
         if (!element) return;
+        this.element = element; // Guardamos la referencia al elemento
         
         const svgContent = await theme.overlayLayer.loadSvgContent('/svg/TieAdvance1.svg');
         
@@ -354,10 +372,10 @@ export const vaderTheme = {
 
         this.joltsTimeline = gsap.timeline({
           repeat: -1,
-          repeatDelay: 0.4
+          repeatDelay: 0.9
         }).to(svgElement, {
-          x: () => gsap.utils.random(-12, 12),
-          y: () => gsap.utils.random(-12, 12),
+          x: () => gsap.utils.random(-6, 8),
+          y: () => gsap.utils.random(-8,6),
           duration: 0.04,
           ease: 'power4.inOut'
         });
@@ -367,11 +385,11 @@ export const vaderTheme = {
           if (this.joltsTimeline) this.joltsTimeline.kill();
           
           gsap.to(svgElement, {
-            duration: 1.5,
-            x: 0,
-            y: 0,
+            duration: 5,
+            x: 1,
+            y: -1,
             rotation: 0,
-            scale: 0.98,
+            scale: 0.95,
             ease: Back.easeOut.config(2),
             onComplete: () => {
                  gsap.to(svgElement, { scale: 1, duration: 0.5, ease: 'power1.out' });
@@ -380,11 +398,26 @@ export const vaderTheme = {
         });
       },
 
+      // Nueva animación para la fase 'travel'
+      travelAnimation: function() {
+        const svgElement = this.element.querySelector('svg');
+        if (!svgElement) return;
+
+        this.travelTimeline = gsap.to(svgElement, {
+          rotation: 2.5, // Grados de rotación
+          duration: 3,   // Duración de cada balanceo
+          yoyo: true,      // Va y vuelve
+          repeat: 3,    // Repetir indefinidamente
+          ease: 'sine.inOut' // Movimiento suave
+        });
+      },
+
       destroy: function(element) {
         if (this.introTimeline) this.introTimeline.kill();
         if (this.rotationTimeline) this.rotationTimeline.kill();
         if (this.vibrationTimeline) this.vibrationTimeline.kill();
         if (this.joltsTimeline) this.joltsTimeline.kill();
+        if (this.travelTimeline) this.travelTimeline.kill();
         gsap.killTweensOf(this.startVibrationAnimation);
         const svgElement = element ? element.querySelector('svg') : null;
         if (svgElement) {
@@ -427,9 +460,9 @@ export const vaderTheme = {
       rotationTimeline: null,
       // Objeto para controlar las velocidades en cada fase
       speeds: {
-        initial: 0.9, // Velocidad inicial 
+        initial: 0.01, // Velocidad inicial 
         jump: 0.5,     // Velocidad media
-        final: 1    // Velocidad final
+        final: 0.98    // Velocidad final
       },
 
       init: async function(element, theme) {
@@ -455,13 +488,13 @@ export const vaderTheme = {
       fadeIn: function() {
         if (!this.element) return;
         // Ajuste: Fade in más rápido a una opacidad mayor
-        gsap.to(this.element, { opacity: 0.2, duration: 6, ease: 'power2.out' });
+        gsap.to(this.element, { opacity: 0.1, duration: 6, ease: 'power2.out' });
       },
 
       // Nuevo: Fade intermedio para variar la opacidad durante el salto
       fadeIntermedio: function() {
         if (!this.element) return;
-        gsap.to(this.element, { opacity: 0.3, duration: 7, ease: 'power2.inOut' });
+        gsap.to(this.element, { opacity: 0.08, duration: 7, ease: 'power2.inOut' });
       },
 
       fadeOut: function() {

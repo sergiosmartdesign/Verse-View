@@ -120,6 +120,7 @@ export const vaderTheme = {
       const deathStarGeometry = new THREE.SphereGeometry(300, 64, 64);
       const deathStarMaterial = new THREE.MeshLambertMaterial({ map: deathStarTexture, transparent: true, opacity: 0 });
       const deathStar = new THREE.Mesh(deathStarGeometry, deathStarMaterial);
+      deathStar.scale.set(0.1, 0.1, 0.1); // 1. Establecemos la escala inicial a un valor pequeño
       scene.add(deathStar);
       const starCount = 5000;
       const starPositions = []; 
@@ -186,6 +187,9 @@ export const vaderTheme = {
                 gsap.to(cameraSpeed, { value: 0, duration: 3.0, ease: 'power2.out' });
                 gsap.to(starMaterial.color, { r: 1.0, g: 1.0, b: 1.0, duration: 3.0 });
                 gsap.to(deathStar.material, { opacity: 1, duration: 3.0 });
+                
+                // 2. Añadimos la animación de escala para que crezca hasta su tamaño normal
+                gsap.to(deathStar.scale, { x: 1, y: 1, z: 1, duration: 3.5, ease: 'power2.out' });
 
                 // Desvanece el vórtice
                 this.theme.vortexLayer.animation.fadeOut(); // 3. Inicia el fade out
@@ -238,12 +242,12 @@ export const vaderTheme = {
         const currentLineVertices = starGeometry.attributes.position.array;
         for (let i = 0; i < starCount; i++) {
             const star = starPositions[i];
-            if (phase === 'jump') { star.velocity += 0.15; }
+            if (phase === 'jump') { star.velocity += 2; }
             else if (phase === 'arrival') { star.velocity *= 0.95; }
             else if (phase === 'final') { star.velocity = 0; }
             star.z += star.velocity;
-            let lineLength = 1.5;
-            if (phase === 'jump') { lineLength += star.velocity * 5; }
+            let lineLength = 2;
+            if (phase === 'jump') { lineLength += star.velocity * 11; }
             const i6 = i * 6;
             currentLineVertices[i6] = star.x; currentLineVertices[i6 + 1] = star.y; currentLineVertices[i6 + 2] = star.z;
             currentLineVertices[i6 + 3] = star.x; currentLineVertices[i6 + 4] = star.y; currentLineVertices[i6 + 5] = star.z - lineLength;
@@ -500,7 +504,7 @@ export const vaderTheme = {
       fadeOut: function() {
         if (!this.element) return;
         // Ajuste: Fade out un poco más largo para una transición más suave
-        gsap.to(this.element, { opacity: 0, duration: 3.0, ease: 'power2.inOut' });
+        gsap.to(this.element, { opacity: 0, duration: 0, ease: 'power2.inOut' });
       },
 
       startRotation: function() {

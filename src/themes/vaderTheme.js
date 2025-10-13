@@ -292,13 +292,15 @@ export const vaderTheme = {
   overlayLayer: {
     type: 'svg',
     content: '', 
+    // Cambios en los estilos del contenedor del SVG
     styles: {
       position: 'absolute',
-      top: '0',
-      left: '0',
-      width: '100vw',
-      height: '100vh',
+      top: '50%',
+      left: '50%',
+      width: '120vw', // Hacemos el contenedor un 20% más ancho que la ventana
+      height: '120vh', // y un 20% más alto
       'z-index': 10,
+      transform: 'translate(-50%, -50%)', // Centramos el contenedor
       'pointer-events': 'none',
     },
     async loadSvgContent(svgPath) {
@@ -329,9 +331,9 @@ export const vaderTheme = {
           element.innerHTML = svgContent;
           const newSvgElement = element.querySelector('svg');
           if (newSvgElement) {
-            newSvgElement.style.width = '100%';
-            newSvgElement.style.height = '100%';
-            newSvgElement.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+            newSvgElement.style.width = '100%'; // El SVG ocupa el 100% de su nuevo contenedor (120vw x 120vh)
+            newSvgElement.style.height = '100%'; // El SVG ocupa el 100% de su nuevo contenedor (120vw x 120vh)
+            newSvgElement.setAttribute('preserveAspectRatio', 'xMidYMid slice'); // 'slice' asegura que el SVG cubra todo el área, recortando lo que sobre
 
             this.introTimeline = gsap.fromTo(element, 
               { opacity: 0, scale: 1.1 }, 
@@ -492,13 +494,13 @@ export const vaderTheme = {
       fadeIn: function() {
         if (!this.element) return;
         // Ajuste: Fade in más rápido a una opacidad mayor
-        gsap.to(this.element, { opacity: 0.1, duration: 6, ease: 'power2.out' });
+        gsap.to(this.element, { opacity: 0.3, duration: 6, ease: 'power2.out' });
       },
 
       // Nuevo: Fade intermedio para variar la opacidad durante el salto
       fadeIntermedio: function() {
         if (!this.element) return;
-        gsap.to(this.element, { opacity: 0.08, duration: 7, ease: 'power2.inOut' });
+        gsap.to(this.element, { opacity: 0.2, duration: 7, ease: 'power2.inOut' });
       },
 
       fadeOut: function() {

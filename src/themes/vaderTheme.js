@@ -148,7 +148,8 @@ export const vaderTheme = {
     async loadSvgTexture(svgPath) {
       try {
         const img = new Image();
-        img.src = svgPath;
+        // Use relative paths that work in both development and production
+        img.src = svgPath.startsWith('./') ? svgPath : `./${svgPath.replace(/^\//, '')}`;
         return new Promise((resolve, reject) => {
           img.onload = () => resolve(img);
           img.onerror = (error) => {
@@ -171,11 +172,16 @@ export const vaderTheme = {
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setClearColor(0x000000, 1);
 
-      const [gasPlanetSvg, rockyPlanetSvg, deathStarSvg] = await Promise.all([
-        this.loadSvgTexture('/svg/gas-planet.svg'),
-        this.loadSvgTexture('/svg/rocky-planet.svg'),
-        this.loadSvgTexture('/svg/star-killer.svg')
+      const svgResults = await Promise.allSettled([
+        this.loadSvgTexture('./svg/gas-planet.svg'),
+        this.loadSvgTexture('./svg/rocky-planet.svg'),
+        this.loadSvgTexture('./svg/star-killer.svg')
       ]);
+
+      // Extract successful results, use null for failed loads
+      const gasPlanetSvg = svgResults[0].status === 'fulfilled' ? svgResults[0].value : null;
+      const rockyPlanetSvg = svgResults[1].status === 'fulfilled' ? svgResults[1].value : null;
+      const deathStarSvg = svgResults[2].status === 'fulfilled' ? svgResults[2].value : null;
       const rockyCanvas = document.createElement('canvas');
       rockyCanvas.width = 512; rockyCanvas.height = 256;
       const rockyCtx = rockyCanvas.getContext('2d');
@@ -510,7 +516,9 @@ export const vaderTheme = {
     },
     async loadSvgContent(svgPath) {
       try {
-        const response = await fetch(svgPath);
+        // Use relative paths that work in both development and production
+        const resolvedPath = svgPath.startsWith('./') ? svgPath : `./${svgPath.replace(/^\//, '')}`;
+        const response = await fetch(resolvedPath);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         return await response.text();
       } catch (error) {
@@ -532,7 +540,7 @@ export const vaderTheme = {
         if (!element) return;
         this.element = element; // Guardamos la referencia al elemento
         
-        const svgContent = await theme.vortexLayer.loadSvgContent('/svg/vortex.svg');
+        const svgContent = await theme.vortexLayer.loadSvgContent('./svg/vortex.svg');
         if (svgContent) {
           this.element.innerHTML = svgContent;
           const svgElement = this.element.querySelector('svg');
@@ -627,7 +635,7 @@ export const vaderTheme = {
       blinkingTimeline: null,
 
       // --- PARÁMETROS DE ANIMACIÓN CUSTOMIZABLES ---
-      svgPath: '/svg/search-vader.svg', // Ruta a tu nuevo SVG
+      svgPath: './svg/search-vader.svg', // Ruta a tu nuevo SVG
       
       // Temporización
       startTime: 3000, // (ms) Cuándo empieza a aparecer (después del inicio)

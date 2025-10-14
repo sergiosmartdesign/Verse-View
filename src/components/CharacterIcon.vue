@@ -47,7 +47,7 @@ const props = defineProps({
 });
 
 const isSvgFile = computed(() => {
-  return props.svgCode && props.svgCode.startsWith('/');
+  return props.svgCode && (props.svgCode.startsWith('/') || props.svgCode.startsWith('./'));
 });
 </script>
 

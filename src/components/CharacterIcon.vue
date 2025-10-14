@@ -1,10 +1,53 @@
 <template>
-  <div class="search-icon" v-html="svgCode"></div>
+  <div
+    class="search-icon"
+    :style="{
+      width: theme?.searchBar?.icon?.size?.width || '72px',
+      height: theme?.searchBar?.icon?.size?.height || '72px'
+    }"
+  >
+    <img
+      v-if="isSvgFile"
+      :src="svgCode"
+      alt="Character Icon"
+      :style="{
+        width: '100%',
+        height: '100%',
+        filter: theme?.searchBar?.icon?.effects?.filter || 'drop-shadow(0 0 4px var(--theme-primary)) drop-shadow(0 0 12px var(--theme-primary))',
+        opacity: iconVisible ? (theme?.searchBar?.icon?.effects?.opacity?.visible || 1) : (theme?.searchBar?.icon?.effects?.opacity?.initial || 0),
+        transform: iconVisible ? (theme?.searchBar?.icon?.effects?.transform?.visible || 'scale(1)') : (theme?.searchBar?.icon?.effects?.transform?.initial || 'scale(0.3)'),
+        transition: theme?.searchBar?.icon?.effects?.transition || 'all 0.8s ease-out'
+      }"
+    />
+    <div
+      v-else
+      v-html="svgCode"
+      :style="{
+        width: '100%',
+        height: '100%',
+        filter: theme?.searchBar?.icon?.effects?.filter || 'drop-shadow(0 0 4px var(--theme-primary)) drop-shadow(0 0 12px var(--theme-primary))',
+        opacity: iconVisible ? (theme?.searchBar?.icon?.effects?.opacity?.visible || 1) : (theme?.searchBar?.icon?.effects?.opacity?.initial || 0),
+        transform: iconVisible ? (theme?.searchBar?.icon?.effects?.transform?.visible || 'scale(1)') : (theme?.searchBar?.icon?.effects?.transform?.initial || 'scale(0.3)'),
+        transition: theme?.searchBar?.icon?.effects?.transition || 'all 0.8s ease-out'
+      }"
+    ></div>
+  </div>
 </template>
 
 <script setup>
-defineProps({
-  svgCode: String
+import { computed } from 'vue';
+
+const props = defineProps({
+  svgCode: String,
+  theme: Object,
+  iconVisible: {
+    type: Boolean,
+    default: false
+  }
+});
+
+const isSvgFile = computed(() => {
+  return props.svgCode && props.svgCode.startsWith('/');
 });
 </script>
 
@@ -19,21 +62,7 @@ defineProps({
   justify-content: center;
 }
 
-.search-icon :deep(svg) {
-  width: 72px;
-  height: 72px;
-  display: block;
-  filter: drop-shadow(0 0 4px var(--theme-primary)) drop-shadow(0 0 12px var(--theme-primary));
-  opacity: 0;
-  transform: scale(0.3);
-  transition: all 0.8s ease-out;
-}
-
-.search-icon.visible :deep(svg) {
-  opacity: 1;
-  transform: scale(1);
-  filter: drop-shadow(0 0 6px var(--theme-primary)) drop-shadow(0 0 12px var(--theme-primary));
-}
+/* Icon styling is now handled via inline styles for full themeability */
 
 :deep(.glitching) {
   animation:

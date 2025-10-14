@@ -2,44 +2,141 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 import { Back } from 'gsap';
 
+// =============================================================================
+// VADER THEME CONFIGURATION
+// =============================================================================
+// This file contains all customizable properties for the Vader theme.
+// Edit these values to change the appearance and behavior of the Vader theme.
+//
+// IMPORTANT: Changes here only affect the Vader theme, not other themes.
+// Save this file and the changes will apply immediately via hot reload.
+//
+// COLOR OPTIONS: Use hex (#FF0000), rgb(255,0,0), or named colors (red)
+// FONT WEIGHTS: normal, bold, or numbers 100-900
+// POSITIONS: Use px, %, vh, vw, or calc() expressions
+// =============================================================================
+
 export const vaderTheme = {
+  // Theme identification (DO NOT EDIT)
   themeId: 'vader',
   displayName: 'Vader',
 
-  // Page Metadata
+  // Page metadata - Controls browser title and favicon
   pageTitle: 'I find your lack of faith disturbing.',
-  favicon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚔️</text></svg>',
+  favicon: '/svg/vaderfav.svg',
 
-  // Styling Properties
+  // Global styling properties - Used as fallbacks for component-specific settings
   colors: {
-    background: '#000000',
-    primary: '#FF0000',
-    accent: '#8B0000',
+    background: '#000000',       // Page background color
+    primary: '#FF0000',          // Primary accent color (red)
+    accent: '#8B0000',           // Secondary accent color (dark red)
   },
   font: {
-    family: "'Arial Black', sans-serif",
-    size: '16px',
+    family: "'Arial Black', sans-serif", // Global font family fallback
+    size: '16px',               // Global font size fallback
   },
 
-  // Component-Specific Data
+  // =============================================================================
+  // SEARCH BAR CUSTOMIZATION
+  // =============================================================================
+  // Customize the search bar appearance, position, and behavior.
+  // All properties are optional - themes without these properties use defaults.
+  // =============================================================================
   searchBar: {
-    iconSvg: `<svg id="vaderIcon" width="80" height="100" viewBox="0 0 80 100">
-        <rect x="10" y="10" width="60" height="70" fill="#000000" stroke="#FF0000" stroke-width="2" rx="5" />
-        <rect x="20" y="20" width="40" height="30" fill="#000000" />
-        <circle cx="30" cy="35" r="5" fill="#FF0000" />
-        <circle cx="50" cy="35" r="5" fill="#FF0000" />
-        <rect x="25" y="50" width="30" height="5" fill="#FF0000" />
-        <rect x="35" y="60" width="10" height="15" fill="#FF0000" />
-      </svg>`,
+    // Container styling - Controls the overall search bar positioning
+    container: {
+      position: {
+        top: 'calc(40% + 300px)', // Position from top (can use calc() for relative positioning)
+        left: '50%',               // Horizontal centering
+      },
+      zIndex: 1000,               // Stacking order (higher = on top)
+      textAlign: 'center',        // Text alignment within container
+    },
+
+    // Input field styling - Controls the appearance of the text input box
+    input: {
+      // Size dimensions
+      size: {
+        width: '400px',           // Input width (px, %, vw, etc.)
+        height: '30px',          // Input height (px, %, vh, etc.)
+        mobileWidth: '80vw',      // Width on mobile devices
+      },
+      // Shape and borders
+      shape: {
+        borderRadius: '0px',      // Corner rounding (0px = sharp corners)
+      },
+      // Background appearance
+      background: {
+        color: 'rgba(255, 0, 0, 0.1)', // Background color with transparency
+      },
+      // Border styling
+      border: {
+        width: '1px',             // Border thickness
+        color: '#FF0000',         // Border color (hex, rgb, named colors)
+        style: 'solid',           // Border style (solid, dashed, dotted)
+      },
+      // Text appearance inside the input
+      text: {
+        color: '#f1830eff',         // Text color (EDIT THIS to change text color)
+        fontFamily: "'Impact', 'Arial Black', sans-serif", // Font family stack
+        fontSize: '14px',         // Font size (EDIT THIS to change size)
+        fontWeight: 'normal',
+        letterSpacing: '2px',       // Font weight (normal, bold, 100-900)
+        verticalAlign: 'baseline', // Vertical text alignment
+      },
+      // Visual effects
+      effects: {
+        boxShadow: 'none',        // Drop shadows (none = no shadow)
+        transition: 'all 0.3s',   // Animation timing for hover/focus
+      },
+    },
+
+    // Placeholder text styling - Controls the typing animation text
     placeholder: {
-      initialText: 'Search the dark side...',
-      phrases: [
-        "The Force is strong with this one.",
-        "I find your lack of faith disturbing.",
-        "Do. Or do not. There is no try.",
-        "You underestimate the power of the Dark Side."
-      ],
-      typingSpeed: 40,
+      text: {
+        color: '#f1830eff',
+        fontWeight: 'normal'         // Placeholder text color
+      },
+      position: {
+        top: '5px',              // Vertical offset for placeholder text
+      },
+      animation: {
+        initialText: 'Search... and together we can rule this browser...', // Final text after animation
+        phrases: [                // Array of phrases for typing animation
+          "The Force is strong with this one.",
+          "I find your lack of keywords disturbing.",
+          "There is no escape from my search algorithm.",
+          "The Dark Side of the web holds the answers you seek."
+        ],
+        typingSpeed: 40,         // Characters per second in animation
+      },
+    },
+
+    // Icon styling - Controls the Vader helmet icon appearance and position
+    icon: {
+      svg: '/svg/Vader.svg',     // Path to icon SVG file
+      position: 'above',         // 'above', 'inline', or 'below' the input
+      size: {
+        width: '80px',           // Icon width
+        height: '80px',          // Icon height
+      },
+      effects: {
+        filter: 'drop-shadow(0 0 4px #58059cff) drop-shadow(0 0 12px #58059cff)', // Glow effect
+        opacity: { initial: 0, visible: 1 },     // Fade in animation
+        transform: { initial: 'scale(0.3)', visible: 'scale(1)' }, // Scale animation
+        transition: 'all 0.8s ease-out',        // Animation timing
+      },
+    },
+
+    // Load animation - Controls when and how elements appear
+    loadAnimation: {
+      searchBarDelay: 14000,      // Delay before search bar appears (ms)
+      iconDelay: 800,             // Delay before icon appears after search bar (ms)
+      effects: {
+        opacity: { initial: 0, visible: 1 }, // Fade in from transparent
+        scale: { initial: 1.1, visible: 1 }, // Slight scale down animation
+        transition: 'opacity 1s ease-out',   // Animation timing curve
+      },
     },
   },
 

@@ -13,6 +13,12 @@
       ref="overlayEl"
       :style="theme.overlayLayer.styles">
     </div>
+
+    <div
+      v-if="theme.iconLayer"
+      ref="iconLayerEl"
+      :style="theme.iconLayer.styles">
+    </div>
   </div>
 </template>
 
@@ -27,6 +33,7 @@ const props = defineProps({
 const canvasEl = ref(null);
 const vortexEl = ref(null);
 const overlayEl = ref(null);
+const iconLayerEl = ref(null);
 
 onMounted(() => {
   // 1. Inicializa la animación de fondo 3D
@@ -42,6 +49,11 @@ onMounted(() => {
   // 3. Inicializa la animación de la capa de superposición (SVG)
   if (overlayEl.value && props.theme.overlayLayer?.animation?.init) {
     props.theme.overlayLayer.animation.init(overlayEl.value, props.theme);
+  }
+
+  // 4. Inicializa la nueva capa del ícono parpadeante
+  if (iconLayerEl.value && props.theme.iconLayer?.animation?.init) {
+    props.theme.iconLayer.animation.init(iconLayerEl.value, props.theme);
   }
 });
 
@@ -59,6 +71,11 @@ onUnmounted(() => {
   // 3. Destruye la animación de la capa de superposición
   if (props.theme.overlayLayer?.animation?.destroy) {
     props.theme.overlayLayer.animation.destroy(overlayEl.value);
+  }
+
+  // 4. Destruye la capa del ícono
+  if (props.theme.iconLayer?.animation?.destroy) {
+    props.theme.iconLayer.animation.destroy();
   }
 });
 </script>

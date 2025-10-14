@@ -16,8 +16,8 @@
       class="search-box"
       :class="{ visible: isVisible }"
       :style="{
-        opacity: isVisible ? (theme.searchBar.loadAnimation?.effects?.opacity?.visible || 1) : (theme.searchBar.loadAnimation?.effects?.opacity?.initial || 0),
-        scale: isVisible ? (theme.searchBar.loadAnimation?.effects?.scale?.visible || 1) : (theme.searchBar.loadAnimation?.effects?.scale?.initial || 1.1),
+        opacity: isVisible ? (theme.searchBar.loadAnimation?.effects?.opacity?.visible ?? 1) : (theme.searchBar.loadAnimation?.effects?.opacity?.initial ?? 0),
+        transform: isVisible ? (theme.searchBar.loadAnimation?.effects?.transform?.visible || 'scale(1)') : (theme.searchBar.loadAnimation?.effects?.transform?.initial || 'scale(1.1)'),
         transition: theme.searchBar.loadAnimation?.effects?.transition || 'opacity 1s ease-out'
       }"
     >

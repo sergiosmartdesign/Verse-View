@@ -58,7 +58,7 @@ export const vaderTheme = {
       // Size dimensions
       size: {
         width: '400px',           // Input width (px, %, vw, etc.)
-        height: '30px',          // Input height (px, %, vh, etc.)
+        height: '20px',          // Input height (px, %, vh, etc.)
         mobileWidth: '80vw',      // Width on mobile devices
       },
       // Shape and borders
@@ -134,8 +134,8 @@ export const vaderTheme = {
       iconDelay: 800,             // Delay before icon appears after search bar (ms)
       effects: {
         opacity: { initial: 0, visible: 1 }, // Fade in from transparent
-        scale: { initial: 1.1, visible: 1 }, // Slight scale down animation
-        transition: 'opacity 1s ease-out',   // Animation timing curve
+        transform: { initial: 'scale(0.1)', visible: 'scale(1)' },
+        transition: 'all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)',   // Animation timing curve
       },
     },
   },
@@ -630,6 +630,97 @@ export const vaderTheme = {
           gsap.killTweensOf(this.element);
           this.element.innerHTML = '';
         }
+      }
+    }
+  },
+
+  // =============================================================================
+  // ICON LAYER CUSTOMIZATION
+  // =============================================================================
+  // Esta capa muestra un SVG que parpadea antes de que aparezca la barra de búsqueda.
+  // =============================================================================
+  iconLayer: {
+    type: 'svg',
+    styles: {
+      // Posición y tamaño del SVG
+      position: 'absolute',
+      top: 'calc(40% + 200px)', // Coincide con la barra de búsqueda
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: '200px', // Ancho del SVG
+      'z-index': 1001, // Por encima de la barra de búsqueda
+      'pointer-events': 'none',
+      opacity: 0, // Empieza invisible
+    },
+    async loadSvgContent(svgPath) {
+      try {
+        const response = await fetch(svgPath);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.text();
+      } catch (error) {
+        console.error(`Failed to fetch SVG content from ${svgPath}:`, error);
+        return null;
+      }
+    },
+    animation: {
+      element: null,
+      blinkingTimeline: null,
+
+      // --- PARÁMETROS DE ANIMACIÓN CUSTOMIZABLES ---
+      svgPath: '/svg/search-vader.svg', // Ruta a tu nuevo SVG
+      
+      // Temporización
+      startTime: 3000, // (ms) Cuándo empieza a aparecer (después del inicio)
+      disappearOffset: 200, // (ms) Cuánto tiempo antes de la searchBar debe desaparecer
+
+      // Efectos de entrada y salida
+      fadeIn: { duration: 0.5, ease: 'power1.out' },
+      fadeOut: { duration: 0.1, ease: 'power1.in' },
+
+      // Efecto de parpadeo
+      blinking: {
+        opacity: 0.4, // Opacidad mínima del parpadeo
+        duration: 0.2, // Duración de cada parpadeo
+        ease: 'power1.inOut',
+      },
+      // --- FIN DE PARÁMETROS ---
+
+      init: async function(element, theme) {
+        if (!element) return;
+        this.element = element;
+        
+        const svgContent = await theme.iconLayer.loadSvgContent(this.svgPath);
+        if (svgContent) {
+          element.innerHTML = svgContent;
+        }
+
+        // 2. Definir la animación de parpadeo
+        this.blinkingTimeline = gsap.timeline({ paused: true, repeat: -1, yoyo: true })
+          .to(element, { 
+            opacity: this.blinking.opacity, 
+            duration: this.blinking.duration, 
+            ease: this.blinking.ease 
+          });
+
+        // 3. Programar el inicio de la animación
+        gsap.delayedCall(this.startTime / 1000, () => {
+          gsap.to(element, { opacity: 1, duration: this.fadeIn.duration, ease: this.fadeIn.ease });
+          this.blinkingTimeline.play();
+        });
+
+        // 4. Programar el final de la animación
+        const searchBarDelay = theme.searchBar.loadAnimation.searchBarDelay;
+        const endTime = (searchBarDelay - this.disappearOffset) / 1000;
+        
+        gsap.delayedCall(endTime, () => {
+          this.blinkingTimeline.kill();
+          gsap.to(element, { opacity: 0, duration: this.fadeOut.duration, ease: this.fadeOut.ease });
+        });
+      },
+
+      destroy: function() {
+        if (this.blinkingTimeline) this.blinkingTimeline.kill();
+        gsap.killTweensOf(this.element);
       }
     }
   },

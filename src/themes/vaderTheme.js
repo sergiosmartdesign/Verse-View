@@ -114,7 +114,7 @@ export const vaderTheme = {
 
     // Icon styling - Controls the Vader helmet icon appearance and position
     icon: {
-      svg: '/svg/Vader.svg',     // Path to icon SVG file
+      svg: '/Verse-View/svg/Vader.svg',     // Path to icon SVG file
       position: 'above',         // 'above', 'inline', or 'below' the input
       size: {
         width: '80px',           // Icon width

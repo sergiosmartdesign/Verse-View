@@ -387,84 +387,52 @@ export const vaderTheme = {
   },
 
   overlayLayer: {
-    type: 'svg',
-    content: '', 
-    // Cambios en los estilos del contenedor del SVG
-    styles: {
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      width: '120vw', // Hacemos el contenedor un 20% más ancho que la ventana
-      height: '120vh', // y un 20% más alto
-      'z-index': 10,
-      transform: 'translate(-50%, -50%)', // Centramos el contenedor
-      'pointer-events': 'none',
-    },
-    async loadSvgContent(svgPath) {
-      try {
-        const response = await fetch(svgPath);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.text();
-      } catch (error) {
-        console.error(`Failed to fetch SVG content from ${svgPath}:`, error);
-        return null;
-      }
-    },
+    type: 'dotlottie-vue',
+    lottieSrc: 'https://lottie.host/7929d64a-c983-4efb-a55c-ca3574d390f1/IFELBomFxB.lottie',
     animation: {
       introTimeline: null,
       rotationTimeline: null,
       vibrationTimeline: null,
       joltsTimeline: null,
-      travelTimeline: null, // Referencia para la nueva animación
-      element: null, // Referencia al elemento SVG
+      travelTimeline: null,
+      element: null,
 
-      init: async function(element, theme) {
+      init: function(element, theme) {
         if (!element) return;
-        this.element = element; // Guardamos la referencia al elemento
-        
-        const svgContent = await theme.overlayLayer.loadSvgContent('/svg/TieAdvance1.svg');
-        
-        if (svgContent) {
-          element.innerHTML = svgContent;
-          const newSvgElement = element.querySelector('svg');
-          if (newSvgElement) {
-            newSvgElement.style.width = '100%'; // El SVG ocupa el 100% de su nuevo contenedor (120vw x 120vh)
-            newSvgElement.style.height = '100%'; // El SVG ocupa el 100% de su nuevo contenedor (120vw x 120vh)
-            newSvgElement.setAttribute('preserveAspectRatio', 'xMidYMid slice'); // 'slice' asegura que el SVG cubra todo el área, recortando lo que sobre
+        this.element = element;
 
-            this.introTimeline = gsap.fromTo(element, 
-              { opacity: 0, scale: 1.1 }, 
-              { 
-                opacity: 0.8,
-                scale: 1,
-                duration: 2.5,
-                ease: 'power2.out',
-                onComplete: () => {
-                  this.startRotationAnimation(newSvgElement);
-                }
-              }
-            );
+        // Apply GSAP animations to the Lottie container for cockpit effects
+        this.introTimeline = gsap.fromTo(element,
+          { opacity: 0, scale: 1.1 },
+          {
+            opacity: 0.8,
+            scale: 1,
+            duration: 2.5,
+            ease: 'power2.out',
+            onComplete: () => {
+              this.startRotationAnimation(element);
+            }
           }
-        }
+        );
       },
 
-      startRotationAnimation: function(svgElement) {
-        gsap.set(svgElement, { transformOrigin: '50% 50%' });
-        
-        this.rotationTimeline = gsap.to(svgElement, {
+      startRotationAnimation: function(containerElement) {
+        gsap.set(containerElement, { transformOrigin: '50% 50%' });
+
+        this.rotationTimeline = gsap.to(containerElement, {
           rotation: 2.5,
           duration: 1.25,
           yoyo: true,
           repeat: 1,
           ease: 'power1.inOut',
           onComplete: () => {
-            this.startVibrationAnimation(svgElement);
+            this.startVibrationAnimation(containerElement);
           }
         });
       },
 
-      startVibrationAnimation: function(svgElement) {
-        this.vibrationTimeline = gsap.to(svgElement, {
+      startVibrationAnimation: function(containerElement) {
+        this.vibrationTimeline = gsap.to(containerElement, {
           x: () => gsap.utils.random(-5, 5),
           y: () => gsap.utils.random(-5, 5),
           rotation: () => gsap.utils.random(-0.8, 0.8),
@@ -476,18 +444,18 @@ export const vaderTheme = {
         this.joltsTimeline = gsap.timeline({
           repeat: -1,
           repeatDelay: 0.9
-        }).to(svgElement, {
+        }).to(containerElement, {
           x: () => gsap.utils.random(-6, 8),
           y: () => gsap.utils.random(-8,6),
           duration: 0.04,
           ease: 'power4.inOut'
         });
-        
+
         gsap.delayedCall(4.5, () => {
           if (this.vibrationTimeline) this.vibrationTimeline.kill();
           if (this.joltsTimeline) this.joltsTimeline.kill();
-          
-          gsap.to(svgElement, {
+
+          gsap.to(containerElement, {
             duration: 5,
             x: 1,
             y: -1,
@@ -495,23 +463,22 @@ export const vaderTheme = {
             scale: 0.95,
             ease: Back.easeOut.config(2),
             onComplete: () => {
-                 gsap.to(svgElement, { scale: 1, duration: 0.5, ease: 'power1.out' });
+                  gsap.to(containerElement, { scale: 1, duration: 0.5, ease: 'power1.out' });
             }
           });
         });
       },
 
-      // Nueva animación para la fase 'travel'
+      // Travel animation called by backgroundAnimation during 'travel' phase
       travelAnimation: function() {
-        const svgElement = this.element.querySelector('svg');
-        if (!svgElement) return;
+        if (!this.element) return;
 
-        this.travelTimeline = gsap.to(svgElement, {
-          rotation: 2.5, // Grados de rotación
-          duration: 3,   // Duración de cada balanceo
-          yoyo: true,      // Va y vuelve
-          repeat: 3,    // Repetir indefinidamente
-          ease: 'sine.inOut' // Movimiento suave
+        this.travelTimeline = gsap.to(this.element, {
+          rotation: 2.5,
+          duration: 3,
+          yoyo: true,
+          repeat: 3,
+          ease: 'sine.inOut'
         });
       },
 
@@ -522,14 +489,7 @@ export const vaderTheme = {
         if (this.joltsTimeline) this.joltsTimeline.kill();
         if (this.travelTimeline) this.travelTimeline.kill();
         gsap.killTweensOf(this.startVibrationAnimation);
-        const svgElement = element ? element.querySelector('svg') : null;
-        if (svgElement) {
-          gsap.killTweensOf(svgElement);
-        }
         gsap.killTweensOf(element);
-        if (element) {
-          element.innerHTML = '';
-        }
       }
     }
   },

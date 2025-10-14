@@ -1,7 +1,20 @@
 <template>
   <div class="background-container">
     <canvas ref="canvasEl" class="background-canvas"></canvas>
-    
+
+    <!-- Lottie Animation Layer -->
+    <div
+      v-if="theme.overlayLayer?.type === 'dotlottie-vue'"
+      ref="lottieContainer"
+      class="lottie-overlay">
+      <DotLottieVue
+        :src="theme.overlayLayer.lottieSrc"
+        autoplay
+        loop
+        style="width: 100%; height: 100%;"
+      />
+    </div>
+
     <div
       v-if="theme.vortexLayer"
       ref="vortexEl"
@@ -24,6 +37,7 @@
 
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue';
+import { DotLottieVue } from '@lottiefiles/dotlottie-vue';
 
 const props = defineProps({
   theme: Object
@@ -33,6 +47,7 @@ const props = defineProps({
 const canvasEl = ref(null);
 const vortexEl = ref(null);
 const overlayEl = ref(null);
+const lottieContainer = ref(null);
 const iconLayerEl = ref(null);
 
 onMounted(() => {
@@ -46,8 +61,10 @@ onMounted(() => {
     props.theme.vortexLayer.animation.init(vortexEl.value, props.theme);
   }
 
-  // 3. Inicializa la animación de la capa de superposición (SVG)
-  if (overlayEl.value && props.theme.overlayLayer?.animation?.init) {
+  // 3. Inicializa la animación de la capa de superposición (Lottie or SVG)
+  if (props.theme.overlayLayer?.type === 'dotlottie-vue' && lottieContainer.value && props.theme.overlayLayer?.animation?.init) {
+    props.theme.overlayLayer.animation.init(lottieContainer.value, props.theme);
+  } else if (overlayEl.value && props.theme.overlayLayer?.animation?.init && props.theme.overlayLayer?.type !== 'dotlottie-vue') {
     props.theme.overlayLayer.animation.init(overlayEl.value, props.theme);
   }
 
@@ -69,7 +86,9 @@ onUnmounted(() => {
   }
 
   // 3. Destruye la animación de la capa de superposición
-  if (props.theme.overlayLayer?.animation?.destroy) {
+  if (props.theme.overlayLayer?.type === 'dotlottie-vue' && props.theme.overlayLayer?.animation?.destroy) {
+    props.theme.overlayLayer.animation.destroy(lottieContainer.value);
+  } else if (props.theme.overlayLayer?.animation?.destroy && props.theme.overlayLayer?.type !== 'dotlottie-vue') {
     props.theme.overlayLayer.animation.destroy(overlayEl.value);
   }
 
@@ -97,5 +116,16 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
+}
+
+.lottie-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120vw;
+  height: 120vh;
+  z-index: 10;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 </style>
